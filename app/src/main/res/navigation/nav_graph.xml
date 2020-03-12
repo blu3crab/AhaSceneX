@@ -7,22 +7,22 @@
 
     <fragment
         android:id="@+id/FirstFragment"
-        android:name="com.adaptivehandyapps.ahascenex.FirstFragment"
-        android:label="@string/first_fragment_label"
-        tools:layout="@layout/fragment_first">
+        android:name="com.adaptivehandyapps.ahascenex.stage.StageFragment"
+        android:label="@string/stage_fragment_label"
+        tools:layout="@layout/fragment_stage">
 
         <action
-            android:id="@+id/action_FirstFragment_to_SecondFragment"
+            android:id="@+id/action_StageFragment_to_MakeFragment"
             app:destination="@id/SecondFragment" />
     </fragment>
     <fragment
         android:id="@+id/SecondFragment"
-        android:name="com.adaptivehandyapps.ahascenex.SecondFragment"
-        android:label="@string/second_fragment_label"
-        tools:layout="@layout/fragment_second">
+        android:name="com.adaptivehandyapps.ahascenex.make.MakeFragment"
+        android:label="@string/make_fragment_label"
+        tools:layout="@layout/fragment_make">
 
         <action
-            android:id="@+id/action_SecondFragment_to_FirstFragment"
+            android:id="@+id/action_MakeFragment_to_StageFragment"
             app:destination="@id/FirstFragment" />
     </fragment>
 </navigation>
