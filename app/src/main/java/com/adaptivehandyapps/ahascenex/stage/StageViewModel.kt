@@ -15,6 +15,6 @@ class StageViewModel : ViewModel() {
 //        sceneList.add(sceneName)
 //    }
 
-    val sceneList = mutableListOf("scene #1", "scene #2", "scene #3", "scene #4")
+    val sceneNameList = mutableListOf("scene #1", "scene #2", "scene #3", "scene #4")
 
 }
