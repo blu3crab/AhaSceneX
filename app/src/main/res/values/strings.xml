@@ -4,6 +4,7 @@
     <!-- Strings used for fragments for navigation -->
     <string name="stage_fragment_label">...stage...</string>
     <string name="make_fragment_label">...make...</string>
+    <string name="gallery">Gallery</string>
     <string name="next">Next</string>
     <string name="previous">Previous</string>
 <!--

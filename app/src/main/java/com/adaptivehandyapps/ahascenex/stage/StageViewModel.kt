@@ -1,20 +1,86 @@
 package com.adaptivehandyapps.ahascenex.stage
 
+import android.util.Log
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.adaptivehandyapps.ahascenex.model.StageModel
+import com.adaptivehandyapps.ahascenex.model.StageType
+
+//enum class StageStatus { EMPTY, SCENE, LABEL, PROP, READY }
+enum class StageListStatus { EMPTY, LAUNCH, LOCAL, READY }
 
 class StageViewModel : ViewModel() {
     private val TAG = "StageViewModel"
 
-//    var _sceneList = MutableLiveData<List<String>>()
+    private val _status = MutableLiveData<StageListStatus>()
+    val status: LiveData<StageListStatus>
+        get() = _status
+
+    //private val _stageList = MutableLiveData<List<StageModel>>()
+    //val stageList: LiveData<List<StageModel>>
+    //    get() = _stageList
+    private val _stageList = MutableLiveData<MutableList<StageModel>>()
+    val stageList: LiveData<MutableList<StageModel>>
+        get() = _stageList
+
+    init {
+        //getStageList(StageType.ALL_TYPE)
+        // empty stage list
+//        _status.value = StageListStatus.EMPTY
+//        _stageList.value = ArrayList()
+        setTestStageList()
+    }
+//    content://com.google.android.apps.photos.contentprovider/0/1/content%3A%2F%2Fmedia%2Fexternal%2Fimages%2Fmedia%2F7889/ORIGINAL/NONE/image%2Fjpeg/1140719721
+
+    private fun setTestStageList() {
+        // stage list is empty
+        _status.value = StageListStatus.EMPTY
+        _stageList.value = ArrayList()
+        // add test stage list entries
+        var stageModel = StageModel()
+        stageModel.id = "1000"
+        stageModel.type = StageType.ICON_TYPE.value
+        stageModel.sceneSrcUrl = "content://com.google.android.apps.photos.contentprovider/0/1/content%3A%2F%2Fmedia%2Fexternal%2Fimages%2Fmedia%2F7889/ORIGINAL/NONE/image%2Fjpeg/1140719721"
+        stageModel.label = "Add Scene from Photos"
+
+        var testList = MutableList<StageModel>(1) { stageModel }
+
+        _stageList.value = testList
+        _status.value = StageListStatus.LOCAL
+
+    }
+
+//    /**
+//     * Sets the value of the status LiveData to the Mars API status.
+//     */
+//    private fun getStageList(filter: StageType) {
+//        // stage list is empty
+//        _status.value = StageListStatus.EMPTY
+//        _stageList.value = ArrayList()
+//        // add test stage list entries
+//        var stageModel = StageModel()
+//        stageModel.id = "1000"
+//        stageModel.type = StageType.ICON_TYPE.value
+//        stageModel.sceneSrcUrl = "add_to_queue-24px.svg"
+//        stageModel.label = "Add Scene from Photos"
 //
-//    val getSceneList: LiveData<List<String>>
-//        get() = _sceneList
-//    var sceneList : ArrayList<String> = ArrayList()
+//        var testList = List<StageModel>(1) { stageModel }
 //
-//    fun addScene(sceneName : String) {
-//        sceneList.add(sceneName)
+//        _stageList.value = testList
 //    }
 
-    val sceneNameList = mutableListOf("scene #1", "scene #2", "scene #3", "scene #4")
+    fun addStageModel(stageModel: StageModel) {
+        _stageList.value?.add(stageModel)
+//        _stageList.value = _stageList.value
+
+//        val list = _stageList
+//        list?.let {
+        for (stageModel in _stageList.value!!.listIterator()) {
+            Log.d(TAG, "stageModel id# " + stageModel.label)
+        }
+//        }
+    }
+
 
 }

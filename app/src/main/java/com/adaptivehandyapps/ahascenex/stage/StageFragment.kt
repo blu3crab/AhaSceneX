@@ -1,26 +1,44 @@
 package com.adaptivehandyapps.ahascenex.stage
 
+import android.Manifest
+import android.app.Activity
+import android.app.Application
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ArrayAdapter
 import android.widget.Button
-import android.widget.ListAdapter
-import android.widget.ListView
+import android.widget.Toast
+import androidx.core.content.ContextCompat.checkSelfPermission
+//import androidx.core.content.PermissionChecker.checkSelfPermission
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import com.adaptivehandyapps.ahascenex.R
 import com.adaptivehandyapps.ahascenex.databinding.FragmentStageBinding
+import com.adaptivehandyapps.ahascenex.model.StageModel
+import com.adaptivehandyapps.ahascenex.model.StageType
+import com.bumptech.glide.Glide
+import com.bumptech.glide.request.RequestOptions
 
 /**
  * A simple [Fragment] subclass as the default destination in the navigation.
  */
 class StageFragment : Fragment() {
-
     private val TAG = "StageFragment"
+
+    // for Room
+    private lateinit var application : Application
+
+    var IMAGE_PICK_CODE = 1000
+    var PERMISSION_CODE_READ = 1001
+    var PERMISSION_CODE_WRITE = 1002
+
 
     private lateinit var stageViewModel: StageViewModel
     ///////////////////////////////////////////////////////////////////////////
@@ -28,9 +46,7 @@ class StageFragment : Fragment() {
             inflater: LayoutInflater, container: ViewGroup?,
             savedInstanceState: Bundle?
     ): View? {
-        // Inflate the layout for this fragment
-        //val root = inflater.inflate(R.layout.fragment_stage, container, false)
-        // Get a reference to the binding object and inflate the fragment views.
+        // get reference to the binding object and inflate the fragment views.
         val binding: FragmentStageBinding = DataBindingUtil.inflate(
             inflater, R.layout.fragment_stage, container, false)
 
@@ -39,7 +55,8 @@ class StageFragment : Fragment() {
         binding.setLifecycleOwner(this)
 
         // for Room
-        val application = requireNotNull(this.activity).application
+        //val application = requireNotNull(this.activity).application
+        application = requireNotNull(this.activity).application
 
         // reference to the ViewModel associated with this fragment
         val viewModelFactory = StageViewModelFactory()
@@ -47,31 +64,21 @@ class StageFragment : Fragment() {
 
         // To use the View Model with data binding, you have to explicitly
         // give the binding object a reference to it.
-        binding.stageViewModel = stageViewModel
+        binding.viewModel = stageViewModel
 
-        // bind the stage list adapter
-//        val adapter = StageAdapter()
-//        adapter = ListAdapter(this, android.R.layout.simple_list_item_1, stageViewModel.sceneNameList)
-//        binding.stageList.adapter = adapter
+        // Sets the adapter of the photosGrid RecyclerView
+        binding.sceneListGrid.adapter = SceneGridAdapter(SceneGridAdapter.OnClickListener {
+            //viewModel.displayPropertyDetails(it)
+            Log.d(TAG, "OnClickListener")
+        })
 
-//        // use arrayadapter and define an array
-//        val arrayAdapter: ArrayAdapter<*>
-//        val users = arrayOf(
-//            "Virat Kohli", "Rohit Sharma", "Steve Smith",
-//            "Kane Williamson", "Ross Taylor"
-//        )
-//
-//        // access the listView from xml file
-//        var mListView = binding.root.findViewById<ListView>(R.id.scene_list)
-//        arrayAdapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, users)
-//        mListView.adapter = arrayAdapter
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        view.findViewById<Button>(R.id.button_first).setOnClickListener {
+        view.findViewById<Button>(R.id.button_next).setOnClickListener {
             findNavController().navigate(R.id.action_StageFragment_to_MakeFragment)
         }
 //        https://codelabs.developers.google.com/codelabs/kotlin-android-training-start-external-activity/index.html?index=..%2F..android-kotlin-fundamentals#3
@@ -81,5 +88,76 @@ class StageFragment : Fragment() {
 //                .actionGameFragmentToGameWonFragment(numQuestions, questionIndex))
 //        val args = GameWonFragmentArgs.fromBundle(arguments!!)
 //        Toast.makeText(context, "NumCorrect: ${args.numCorrect}, NumQuestions: ${args.numQuestions}", Toast.LENGTH_LONG).show()
+
+        view.findViewById<Button>(R.id.button_gallery).setOnClickListener {
+            Log.d(TAG, "button_gallery setOnClickListener...")
+            // check for permissions
+            checkPermissionForImage()
+            // launch Gallery intent to select photo
+            pickImageFromGallery()
+        }
     }
+
+    private fun checkPermissionForImage() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            // if READ or WRITE permissions denied, request WRITE as it will bring along READ
+            if ((checkSelfPermission(application, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) ||
+                (checkSelfPermission(application, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED)){
+                Log.d(TAG, "requesting permissions...")
+                val permission = arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                requestPermissions(permission, PERMISSION_CODE_WRITE)
+            }
+        }
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int,
+                                            permissions: Array<String>, grantResults: IntArray) {
+        Log.d(TAG, "onRequestPermissionsResult code " + requestCode)
+        when (requestCode) {
+            PERMISSION_CODE_WRITE -> if (grantResults.size > 0
+                && grantResults[0] == PackageManager.PERMISSION_GRANTED
+            ) {
+                Toast.makeText(context, "Write Permission Granted!", Toast.LENGTH_SHORT)
+                    .show()
+            } else {
+                Toast.makeText(context, "Write Permission Denied!", Toast.LENGTH_SHORT)
+                    .show()
+                // kill app if denied
+                Log.d(TAG, "onRequestPermissionsResult denied - finishAndRemoveTask...")
+                //getActivity()?.finish(); // kills fragment not activity
+                getActivity()?.finishAndRemoveTask()
+            }
+        }
+    }
+
+    private fun pickImageFromGallery() {
+        val intent = Intent(Intent.ACTION_PICK)
+        intent.type = "image/*"
+        startActivityForResult(intent, IMAGE_PICK_CODE) // GIVE AN INTEGER VALUE FOR IMAGE_PICK_CODE LIKE 1000
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (resultCode == Activity.RESULT_OK && requestCode == IMAGE_PICK_CODE) {
+            if (data?.data != null) {
+                val resultUri = data?.data
+                // if imageUri is defined
+                resultUri?.let {
+                    Log.d(TAG, "\nimageUri->" + resultUri)
+                    // add to stage list
+                    var stageModel = StageModel()
+                    stageModel.id = "1000"
+                    stageModel.type = StageType.SCENE_TYPE.value
+                    stageModel.sceneSrcUrl = resultUri.toString()
+                    stageModel.label = "scene " + stageModel.id
+
+                    stageViewModel.addStageModel(stageModel)
+                }
+                if (resultUri == null) {
+                    Log.d(TAG, "\nimageUri NULL...")
+                }
+            }
+        }
+    }
+
 }
