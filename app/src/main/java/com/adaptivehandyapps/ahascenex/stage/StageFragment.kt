@@ -18,6 +18,7 @@ import androidx.core.content.ContextCompat.checkSelfPermission
 //import androidx.core.content.PermissionChecker.checkSelfPermission
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.findNavController
 import androidx.navigation.fragment.findNavController
 import com.adaptivehandyapps.ahascenex.R
 import com.adaptivehandyapps.ahascenex.databinding.FragmentStageBinding
@@ -70,8 +71,16 @@ class StageFragment : Fragment() {
         // Sets the adapter of the photosGrid RecyclerView
         binding.sceneListGrid.adapter = SceneGridAdapter(SceneGridAdapter.OnClickListener {
             //viewModel.displayPropertyDetails(it)
-            Log.d(TAG, "OnClickListener")
+            Log.d(TAG, "SceneGridAdapter OnClickListener")
+            val testInt = 256
+            val testString = "nada"
+            view!!.findNavController()
+                .navigate(
+                    StageFragmentDirections
+                    .actionStageFragmentToMakeFragment(testInt, testString))
         })
+        // retain instance
+        //retainInstance = true
 
         return binding.root
     }
@@ -79,8 +88,17 @@ class StageFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        savedInstanceState?.let {
+            Log.d(TAG, "savedInstanceState not NULL...")
+        }
         view.findViewById<Button>(R.id.button_next).setOnClickListener {
-            findNavController().navigate(R.id.action_StageFragment_to_MakeFragment)
+            val testInt = 256
+            val testString = "nada"
+            //findNavController().navigate(R.id.action_StageFragment_to_MakeFragment)
+            view!!.findNavController()
+                .navigate(
+                    StageFragmentDirections
+                        .actionStageFragmentToMakeFragment(testInt, testString))
         }
 //        https://codelabs.developers.google.com/codelabs/kotlin-android-training-start-external-activity/index.html?index=..%2F..android-kotlin-fundamentals#3
 //        // Adding the parameters to the Action
@@ -126,13 +144,14 @@ class StageFragment : Fragment() {
                 // kill app if denied
                 Log.d(TAG, "onRequestPermissionsResult denied - finishAndRemoveTask...")
                 //getActivity()?.finish(); // kills fragment not activity
-                getActivity()?.finishAndRemoveTask()
+                getActivity()?.finishAndRemoveTask()    // kills activity
             }
         }
     }
 
     private fun pickImageFromGallery() {
-//        val intent = Intent(Intent.ACTION_PICK)
+        // ACTION_OPEN_DOCUMENT retains permissions for later display as well as launching into "local" phone gallery
+        //val intent = Intent(Intent.ACTION_PICK)
         val intent = Intent(Intent.ACTION_OPEN_DOCUMENT)
         intent.type = "image/*"
         startActivityForResult(intent, IMAGE_PICK_CODE) // GIVE AN INTEGER VALUE FOR IMAGE_PICK_CODE LIKE 1000
@@ -149,7 +168,7 @@ class StageFragment : Fragment() {
                     // add to stage list
                     val position = stageViewModel.getStageListSize()
                     var stageModel = StageModel()
-                    stageModel.id = "1001"
+                    //stageModel.id = "1001"
                     stageModel.type = StageType.SCENE_TYPE.value
                     stageModel.sceneSrcUrl = resultUri.toString()
                     stageModel.label = "scene " + position

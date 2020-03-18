@@ -19,9 +19,6 @@ class StageViewModel : ViewModel() {
     val status: LiveData<StageListStatus>
         get() = _status
 
-    //private val _stageList = MutableLiveData<List<StageModel>>()
-    //val stageList: LiveData<List<StageModel>>
-    //    get() = _stageList
     private val _stageList = MutableLiveData<MutableList<StageModel>>()
     val stageList: LiveData<MutableList<StageModel>>
         get() = _stageList
@@ -31,57 +28,39 @@ class StageViewModel : ViewModel() {
         // empty stage list
         emptyStageList()
         _status.value = StageListStatus.READY
-
-//        _status.value = StageListStatus.EMPTY
-//        _stageList.value = ArrayList()
+        // TEST: set EMPTY, replace empty initial list element with first pick
+        //_status.value = StageListStatus.EMPTY
+        //_stageList.value = ArrayList()
         //setTestStageList()
         //getStageList(StageType.ALL_TYPE)
     }
-//    content://com.google.android.apps.photos.contentprovider/0/1/content%3A%2F%2Fmedia%2Fexternal%2Fimages%2Fmedia%2F7889/ORIGINAL/NONE/image%2Fjpeg/1140719721
 
     private fun setTestStageList() {
-//        // stage list is empty
-//        _status.value = StageListStatus.EMPTY
-//        _stageList.value = ArrayList()
+        // TEST: clear initial list
+        // stage list is empty
+        //_status.value = StageListStatus.EMPTY
+        //_stageList.value = ArrayList()
         // add test stage list entries
         var stageModel = StageModel()
         stageModel.id = stageModelId.toString()
         stageModel.type = StageType.ICON_TYPE.value
-//        stageModel.sceneSrcUrl = "content://com.google.android.apps.photos.contentprovider/0/1/content%3A%2F%2Fmedia%2Fexternal%2Fimages%2Fmedia%2F7889/ORIGINAL/NONE/image%2Fjpeg/1140719721"
+        //stageModel.sceneSrcUrl = "content://com.google.android.apps.photos.contentprovider/0/1/content%3A%2F%2Fmedia%2Fexternal%2Fimages%2Fmedia%2F7889/ORIGINAL/NONE/image%2Fjpeg/1140719721"
         stageModel.sceneSrcUrl = "add_to_queue-24px.svg"
         stageModel.label = "dummy test image"
-
+        // TEST: initialize 1 list element, replace entire list
         //var testList = MutableList<StageModel>(1) { stageModel }
         //_stageList.value = testList   // ok
+        // TEST: directly add test element to list
         _stageList.value?.add(stageModel)   // ok - add empty
+        // TEST: add to list using actual setter
         //addStageModel(stageModel)   // ok
-//        _status.value = StageListStatus.LOCAL
-
+        //_status.value = StageListStatus.LOCAL
     }
-
-//    /**
-//     * Sets the value of the status LiveData to the Mars API status.
-//     */
-//    private fun getStageList(filter: StageType) {
-//        // stage list is empty
-//        _status.value = StageListStatus.EMPTY
-//        _stageList.value = ArrayList()
-//        // add test stage list entries
-//        var stageModel = StageModel()
-//        stageModel.id = "1000"
-//        stageModel.type = StageType.ICON_TYPE.value
-//        stageModel.sceneSrcUrl = "add_to_queue-24px.svg"
-//        stageModel.label = "Add Scene from Photos"
-//
-//        var testList = List<StageModel>(1) { stageModel }
-//
-//        _stageList.value = testList
-//    }
 
     fun addStageModel(stageModel: StageModel): Boolean {
         var inserted = false
         if (_status.value == StageListStatus.EMPTY) {
-//            emptyStageList()
+            //emptyStageList()
             // set list ops
             //_stageList.value!!.set(0, stageModel)
             _stageList.value!![0] = stageModel
@@ -93,28 +72,29 @@ class StageViewModel : ViewModel() {
             _stageList.value?.add(stageModel)
             inserted = true
         }
-
-//        val list = _stageList
-//        list?.let {
+        // TEST: if list not null
+        //val list = _stageList
+        //list?.let {
+        // iterate through stagelist
         for (stageModel in _stageList.value!!.listIterator()) {
             Log.d(TAG, "stageModel id# " + stageModel.id +" = " + stageModel.label)
         }
-//        }
+        // mark list ready
         _status.value = StageListStatus.READY
         return inserted
     }
-
+    // clear stagelist
     private fun emptyStageList() {
         Log.d(TAG, "stageModel empty...")
         _status.value = StageListStatus.EMPTY
         _stageList.value = ArrayList()
     }
-
+    // get next stagemodel id
     private fun getNextStageModelId(): Int {
         stageModelId += 1
         return stageModelId
     }
-
+    // get stagelist size
     fun getStageListSize(): Int {
         val size = _stageList.value!!.size
         return size

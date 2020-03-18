@@ -1,6 +1,8 @@
 package com.adaptivehandyapps.ahascenex
 
 import android.os.Bundle
+import android.os.PersistableBundle
+import android.util.Log
 import com.google.android.material.snackbar.Snackbar
 import androidx.appcompat.app.AppCompatActivity
 import android.view.Menu
@@ -9,6 +11,7 @@ import android.view.MenuItem
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
+    private val TAG = "MainActivity"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,5 +40,8 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-
+    override fun onSaveInstanceState(outState: Bundle, outPersistentState: PersistableBundle) {
+        super.onSaveInstanceState(outState, outPersistentState)
+        Log.d(TAG, "onSaveInstanceState invoked...")
+    }
 }

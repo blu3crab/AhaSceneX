@@ -3,26 +3,32 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/nav_graph"
-    app:startDestination="@id/FirstFragment">
+    app:startDestination="@id/StageFragment">
 
     <fragment
-        android:id="@+id/FirstFragment"
+        android:id="@+id/StageFragment"
         android:name="com.adaptivehandyapps.ahascenex.stage.StageFragment"
         android:label="@string/stage_fragment_label"
         tools:layout="@layout/fragment_stage">
 
         <action
             android:id="@+id/action_StageFragment_to_MakeFragment"
-            app:destination="@id/SecondFragment" />
+            app:destination="@id/MakeFragment" />
     </fragment>
     <fragment
-        android:id="@+id/SecondFragment"
+        android:id="@+id/MakeFragment"
         android:name="com.adaptivehandyapps.ahascenex.make.MakeFragment"
         android:label="@string/make_fragment_label"
         tools:layout="@layout/fragment_make">
 
         <action
             android:id="@+id/action_MakeFragment_to_StageFragment"
-            app:destination="@id/FirstFragment" />
+            app:destination="@id/StageFragment" />
+        <argument
+            android:name="testInt"
+            app:argType="integer" />
+        <argument
+            android:name="testString"
+            app:argType="string" />
     </fragment>
 </navigation>
