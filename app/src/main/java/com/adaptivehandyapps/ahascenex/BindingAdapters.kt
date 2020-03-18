@@ -25,14 +25,20 @@ fun bindImage(imgView: ImageView, imgUrl: String?) {
     Log.d("BindingAdapter", "scenex imageUrl...")
     imgUrl?.let {
 //        val imgUri = imgUrl.toUri().buildUpon().scheme("https").build()
-        Log.d("BindingAdapter", "imgUrl->" + imgUrl)
+        Log.d("BindingAdapter", "scenex imgUrl->" + imgUrl)
         val imgUri = imgUrl.toUri()
-        Glide.with(imgView.context)
-            .load(imgUri)
-            .apply(
-                RequestOptions()
-                .placeholder(R.drawable.loading_animation)
-                .error(R.drawable.ic_broken_image))
-            .into(imgView)
+        try {
+            Glide.with(imgView.context)
+                .load(imgUri)
+                .apply(
+                    RequestOptions()
+                        .placeholder(R.drawable.loading_animation)
+                        .error(R.drawable.ic_broken_image)
+                )
+                .into(imgView)
+        }
+        catch (ex : Exception) {
+            Log.e("BindingAdapter", "scenex Glide exception! " + ex.localizedMessage)
+        }
     }
 }

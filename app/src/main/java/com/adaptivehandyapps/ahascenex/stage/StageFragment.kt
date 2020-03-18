@@ -23,8 +23,6 @@ import com.adaptivehandyapps.ahascenex.R
 import com.adaptivehandyapps.ahascenex.databinding.FragmentStageBinding
 import com.adaptivehandyapps.ahascenex.model.StageModel
 import com.adaptivehandyapps.ahascenex.model.StageType
-import com.bumptech.glide.Glide
-import com.bumptech.glide.request.RequestOptions
 
 /**
  * A simple [Fragment] subclass as the default destination in the navigation.
@@ -41,13 +39,16 @@ class StageFragment : Fragment() {
 
 
     private lateinit var stageViewModel: StageViewModel
+    private lateinit var binding: FragmentStageBinding
     ///////////////////////////////////////////////////////////////////////////
     override fun onCreateView(
             inflater: LayoutInflater, container: ViewGroup?,
             savedInstanceState: Bundle?
     ): View? {
         // get reference to the binding object and inflate the fragment views.
-        val binding: FragmentStageBinding = DataBindingUtil.inflate(
+//        val binding: FragmentStageBinding = DataBindingUtil.inflate(
+//            inflater, R.layout.fragment_stage, container, false)
+        binding = DataBindingUtil.inflate(
             inflater, R.layout.fragment_stage, container, false)
 
         // Specify the current activity as the lifecycle owner of the binding.
@@ -131,7 +132,8 @@ class StageFragment : Fragment() {
     }
 
     private fun pickImageFromGallery() {
-        val intent = Intent(Intent.ACTION_PICK)
+//        val intent = Intent(Intent.ACTION_PICK)
+        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT)
         intent.type = "image/*"
         startActivityForResult(intent, IMAGE_PICK_CODE) // GIVE AN INTEGER VALUE FOR IMAGE_PICK_CODE LIKE 1000
     }
@@ -143,18 +145,27 @@ class StageFragment : Fragment() {
                 val resultUri = data?.data
                 // if imageUri is defined
                 resultUri?.let {
-                    Log.d(TAG, "\nimageUri->" + resultUri)
+                    Log.d(TAG, "\nscenex imageUri->" + resultUri)
                     // add to stage list
+                    val position = stageViewModel.getStageListSize()
                     var stageModel = StageModel()
-                    stageModel.id = "1000"
+                    stageModel.id = "1001"
                     stageModel.type = StageType.SCENE_TYPE.value
                     stageModel.sceneSrcUrl = resultUri.toString()
-                    stageModel.label = "scene " + stageModel.id
+                    stageModel.label = "scene " + position
 
-                    stageViewModel.addStageModel(stageModel)
+                    if (stageViewModel.addStageModel(stageModel)) {
+                        //val position = stageViewModel.stageList.value?.size!!.minus(1)
+                        binding.sceneListGrid.adapter?.notifyItemInserted(position)
+                        Log.d(TAG, "\nscenex notifyItemInserted at position " + position)
+                    }
+                    else {
+                        binding.sceneListGrid.adapter?.notifyItemChanged(0)
+                        Log.d(TAG, "\nscenex notifyItemInserted at position 0")
+                    }
                 }
                 if (resultUri == null) {
-                    Log.d(TAG, "\nimageUri NULL...")
+                    Log.d(TAG, "\nscenex imageUri NULL...")
                 }
             }
         }

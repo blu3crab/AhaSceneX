@@ -17,8 +17,8 @@
 
 package com.adaptivehandyapps.ahascenex.model
 
+import android.net.Uri
 import android.os.Parcelable
-import com.squareup.moshi.Json
 import kotlinx.android.parcel.Parcelize
 
 enum class StageType(val value: String) {
@@ -30,11 +30,12 @@ enum class StageType(val value: String) {
 
 @Parcelize
 data class StageModel(
-        var id: String = "nada",
+    var id: String = "nada",
 //        @Json(name = "img_src") val imgSrcUrl: String,
-        var sceneSrcUrl: String = "nada",
-        var type: String = "nada",
-        var label: String = "nada") : Parcelable {
+//    var sceneSrcUrl: Uri? = null,
+    var sceneSrcUrl: String = "nada",
+    var type: String = "nada",
+    var label: String = "nada") : Parcelable {
 
     val isScene
         get() = type == StageType.SCENE_TYPE.value
