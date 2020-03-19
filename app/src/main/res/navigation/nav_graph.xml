@@ -31,6 +31,10 @@
             android:name="testString"
             app:argType="string" />
         <argument
+            android:name="stageModel"
+            app:argType="com.adaptivehandyapps.ahascenex.model.StageModel" />
+        <!--
+        <argument
             android:name="stageModelId"
             app:argType="string" />
         <argument
@@ -42,5 +46,6 @@
         <argument
             android:name="stageModelSceneSrcUrl"
             app:argType="string" />
+            -->
     </fragment>
 </navigation>

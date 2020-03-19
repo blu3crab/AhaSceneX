@@ -48,10 +48,11 @@ class MakeFragment : Fragment() {
 
         val args = MakeFragmentArgs.fromBundle(arguments!!)
 
-        stageModel.id = args.stageModelId
-        stageModel.label = args.stageModelLabel
-        stageModel.type = args.stageModelType
-        stageModel.sceneSrcUrl = args.stageModelSceneSrcUrl
+        stageModel = args.stageModel
+//        stageModel.id = args.stageModelId
+//        stageModel.label = args.stageModelLabel
+//        stageModel.type = args.stageModelType
+//        stageModel.sceneSrcUrl = args.stageModelSceneSrcUrl
 
         //Toast.makeText(context, "testInt: ${args.testInt}, testString: ${args.testString}", Toast.LENGTH_LONG).show()
         Toast.makeText(context, "testInt: ${args.testInt}, testString: ${args.testString}", Toast.LENGTH_LONG).show()

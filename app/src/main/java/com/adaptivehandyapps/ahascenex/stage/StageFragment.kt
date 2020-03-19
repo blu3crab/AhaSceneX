@@ -75,22 +75,22 @@ class StageFragment : Fragment() {
             val testInt = 256
             val testString = "nada"
             // extract stagemodel element by element
-            val stageModel = stageViewModel.stageList.value?.get(0)
-            var stageModelId = "nada"
-            var stageModelLabel = "nada"
-            var stageModelType = "nada"
-            var stageModelSceneSrcUrl = "nada"
-            stageModel?.let {
-                stageModelId = stageModel.id
-                stageModelLabel = stageModel.label
-                stageModelType = stageModel.type
-                stageModelSceneSrcUrl = stageModel.sceneSrcUrl
-            }
+            val stageModel = stageViewModel.stageList.value!!.get(0)
+//            var stageModelId = "nada"
+//            var stageModelLabel = "nada"
+//            var stageModelType = "nada"
+//            var stageModelSceneSrcUrl = "nada"
+//            stageModel?.let {
+//                stageModelId = stageModel.id
+//                stageModelLabel = stageModel.label
+//                stageModelType = stageModel.type
+//                stageModelSceneSrcUrl = stageModel.sceneSrcUrl
+//            }
             view!!.findNavController()
                 .navigate(
                     StageFragmentDirections
-                    .actionStageFragmentToMakeFragment(testInt, testString,
-                        stageModelId, stageModelLabel, stageModelType, stageModelSceneSrcUrl))
+                    .actionStageFragmentToMakeFragment(testInt, testString, stageModel))
+//                        stageModelId, stageModelLabel, stageModelType, stageModelSceneSrcUrl))
         })
         // retain instance
         //retainInstance = true
@@ -108,22 +108,22 @@ class StageFragment : Fragment() {
             val testInt = 256
             val testString = "nada"
             // extract stagemodel element by element
-            val stageModel = stageViewModel.stageList.value?.get(0)
-            var stageModelId = "nada"
-            var stageModelLabel = "nada"
-            var stageModelType = "nada"
-            var stageModelSceneSrcUrl = "nada"
-            stageModel?.let {
-                stageModelId = stageModel.id
-                stageModelLabel = stageModel.label
-                stageModelType = stageModel.type
-                stageModelSceneSrcUrl = stageModel.sceneSrcUrl
-            }
+            val stageModel = stageViewModel.stageList.value!!.get(0)
+//            var stageModelId = "nada"
+//            var stageModelLabel = "nada"
+//            var stageModelType = "nada"
+//            var stageModelSceneSrcUrl = "nada"
+//            stageModel?.let {
+//                stageModelId = stageModel.id
+//                stageModelLabel = stageModel.label
+//                stageModelType = stageModel.type
+//                stageModelSceneSrcUrl = stageModel.sceneSrcUrl
+//            }
             view!!.findNavController()
                 .navigate(
                     StageFragmentDirections
-                        .actionStageFragmentToMakeFragment(testInt, testString,
-                            stageModelId, stageModelLabel, stageModelType, stageModelSceneSrcUrl))
+                        .actionStageFragmentToMakeFragment(testInt, testString, stageModel))
+//                            stageModelId, stageModelLabel, stageModelType, stageModelSceneSrcUrl))
 //                        .actionStageFragmentToMakeFragment(testInt, testString))
         }
 
