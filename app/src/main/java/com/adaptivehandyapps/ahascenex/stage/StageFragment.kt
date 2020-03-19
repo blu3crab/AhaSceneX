@@ -74,10 +74,23 @@ class StageFragment : Fragment() {
             Log.d(TAG, "SceneGridAdapter OnClickListener")
             val testInt = 256
             val testString = "nada"
+            // extract stagemodel element by element
+            val stageModel = stageViewModel.stageList.value?.get(0)
+            var stageModelId = "nada"
+            var stageModelLabel = "nada"
+            var stageModelType = "nada"
+            var stageModelSceneSrcUrl = "nada"
+            stageModel?.let {
+                stageModelId = stageModel.id
+                stageModelLabel = stageModel.label
+                stageModelType = stageModel.type
+                stageModelSceneSrcUrl = stageModel.sceneSrcUrl
+            }
             view!!.findNavController()
                 .navigate(
                     StageFragmentDirections
-                    .actionStageFragmentToMakeFragment(testInt, testString))
+                    .actionStageFragmentToMakeFragment(testInt, testString,
+                        stageModelId, stageModelLabel, stageModelType, stageModelSceneSrcUrl))
         })
         // retain instance
         //retainInstance = true
@@ -94,19 +107,25 @@ class StageFragment : Fragment() {
         view.findViewById<Button>(R.id.button_next).setOnClickListener {
             val testInt = 256
             val testString = "nada"
-            //findNavController().navigate(R.id.action_StageFragment_to_MakeFragment)
+            // extract stagemodel element by element
+            val stageModel = stageViewModel.stageList.value?.get(0)
+            var stageModelId = "nada"
+            var stageModelLabel = "nada"
+            var stageModelType = "nada"
+            var stageModelSceneSrcUrl = "nada"
+            stageModel?.let {
+                stageModelId = stageModel.id
+                stageModelLabel = stageModel.label
+                stageModelType = stageModel.type
+                stageModelSceneSrcUrl = stageModel.sceneSrcUrl
+            }
             view!!.findNavController()
                 .navigate(
                     StageFragmentDirections
-                        .actionStageFragmentToMakeFragment(testInt, testString))
+                        .actionStageFragmentToMakeFragment(testInt, testString,
+                            stageModelId, stageModelLabel, stageModelType, stageModelSceneSrcUrl))
+//                        .actionStageFragmentToMakeFragment(testInt, testString))
         }
-//        https://codelabs.developers.google.com/codelabs/kotlin-android-training-start-external-activity/index.html?index=..%2F..android-kotlin-fundamentals#3
-//        // Adding the parameters to the Action
-//        view.findNavController()
-//            .navigate(GameFragmentDirections
-//                .actionGameFragmentToGameWonFragment(numQuestions, questionIndex))
-//        val args = GameWonFragmentArgs.fromBundle(arguments!!)
-//        Toast.makeText(context, "NumCorrect: ${args.numCorrect}, NumQuestions: ${args.numQuestions}", Toast.LENGTH_LONG).show()
 
         view.findViewById<Button>(R.id.button_gallery).setOnClickListener {
             Log.d(TAG, "button_gallery setOnClickListener...")

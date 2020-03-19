@@ -1,6 +1,7 @@
 package com.adaptivehandyapps.ahascenex.make
 
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -12,14 +13,19 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import com.adaptivehandyapps.ahascenex.R
 import com.adaptivehandyapps.ahascenex.databinding.FragmentMakeBinding
+import com.adaptivehandyapps.ahascenex.model.StageModel
 
 /**
  * A simple [Fragment] subclass as the second destination in the navigation.
  */
 class MakeFragment : Fragment() {
+    private val TAG = "MakeFragment"
 
     private lateinit var makeViewModel: MakeViewModel
     private lateinit var binding: FragmentMakeBinding
+
+//    private lateinit var stageModel: StageModel
+    private var stageModel: StageModel = StageModel()
 
     override fun onCreateView(
             inflater: LayoutInflater, container: ViewGroup?,
@@ -41,10 +47,16 @@ class MakeFragment : Fragment() {
         binding.viewModel = makeViewModel
 
         val args = MakeFragmentArgs.fromBundle(arguments!!)
-        Toast.makeText(context, "testInt: ${args.testInt}, testString: ${args.testString}", Toast.LENGTH_LONG).show()
 
-//        // Inflate the layout for this fragment
-//        return inflater.inflate(R.layout.fragment_make, container, false)
+        stageModel.id = args.stageModelId
+        stageModel.label = args.stageModelLabel
+        stageModel.type = args.stageModelType
+        stageModel.sceneSrcUrl = args.stageModelSceneSrcUrl
+
+        //Toast.makeText(context, "testInt: ${args.testInt}, testString: ${args.testString}", Toast.LENGTH_LONG).show()
+        Toast.makeText(context, "testInt: ${args.testInt}, testString: ${args.testString}", Toast.LENGTH_LONG).show()
+        Log.d(TAG, "stageModel id# " + stageModel.id + " = " + stageModel.label + ", type " + stageModel.type + ", uri " + stageModel.sceneSrcUrl)
+
         return binding.root
 
     }

@@ -30,5 +30,17 @@
         <argument
             android:name="testString"
             app:argType="string" />
+        <argument
+            android:name="stageModelId"
+            app:argType="string" />
+        <argument
+            android:name="stageModelLabel"
+            app:argType="string" />
+        <argument
+            android:name="stageModelType"
+            app:argType="string" />
+        <argument
+            android:name="stageModelSceneSrcUrl"
+            app:argType="string" />
     </fragment>
 </navigation>
