@@ -1,3 +1,6 @@
+//
+// Created by MAT on 28FEB2020.
+//
 package com.adaptivehandyapps.ahascenex.stage
 
 import android.Manifest
@@ -74,8 +77,11 @@ class StageFragment : Fragment() {
             Log.d(TAG, "SceneGridAdapter OnClickListener")
             val testInt = 256
             val testString = "nada"
+
+            // set stagemodel from listener
+            val stageModel = it
+            //val stageModel = stageViewModel.stageList.value!!.get(0)
             // extract stagemodel element by element
-            val stageModel = stageViewModel.stageList.value!!.get(0)
 //            var stageModelId = "nada"
 //            var stageModelLabel = "nada"
 //            var stageModelType = "nada"

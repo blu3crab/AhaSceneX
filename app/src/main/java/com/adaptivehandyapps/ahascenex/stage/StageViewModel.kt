@@ -1,3 +1,6 @@
+//
+// Created by MAT on 28FEB2020.
+//
 package com.adaptivehandyapps.ahascenex.stage
 
 import android.util.Log
@@ -13,7 +16,7 @@ enum class StageListStatus { EMPTY, LAUNCH, LOCAL, READY }
 class StageViewModel : ViewModel() {
     private val TAG = "StageViewModel"
 
-    private var stageModelId = 999
+    private var stageModelNickname = 999
 
     private val _status = MutableLiveData<StageListStatus>()
     val status: LiveData<StageListStatus>
@@ -42,7 +45,7 @@ class StageViewModel : ViewModel() {
         //_stageList.value = ArrayList()
         // add test stage list entries
         var stageModel = StageModel()
-        stageModel.id = stageModelId.toString()
+        stageModel.nickname = stageModelNickname.toString()
         stageModel.type = StageType.ICON_TYPE.value
         //stageModel.sceneSrcUrl = "content://com.google.android.apps.photos.contentprovider/0/1/content%3A%2F%2Fmedia%2Fexternal%2Fimages%2Fmedia%2F7889/ORIGINAL/NONE/image%2Fjpeg/1140719721"
         stageModel.sceneSrcUrl = "add_to_queue-24px.svg"
@@ -67,8 +70,8 @@ class StageViewModel : ViewModel() {
             //_stageList.value = _stageList.value
         }
         else {
-            stageModel.id = getNextStageModelId().toString()
-            Log.d(TAG, "add stageModel id# " + stageModel.id + " = " + stageModel.label)
+            stageModel.nickname = getNextStageModelNickname().toString()
+            Log.d(TAG, "add stageModel id# " + stageModel.nickname + " = " + stageModel.label)
             _stageList.value?.add(stageModel)
             inserted = true
         }
@@ -77,7 +80,7 @@ class StageViewModel : ViewModel() {
         //list?.let {
         // iterate through stagelist
         for (stageModel in _stageList.value!!.listIterator()) {
-            Log.d(TAG, "stageModel id# " + stageModel.id +" = " + stageModel.label)
+            Log.d(TAG, "stageModel id# " + stageModel.nickname +" = " + stageModel.label)
         }
         // mark list ready
         _status.value = StageListStatus.READY
@@ -90,9 +93,9 @@ class StageViewModel : ViewModel() {
         _stageList.value = ArrayList()
     }
     // get next stagemodel id
-    private fun getNextStageModelId(): Int {
-        stageModelId += 1
-        return stageModelId
+    private fun getNextStageModelNickname(): Int {
+        stageModelNickname += 1
+        return stageModelNickname
     }
     // get stagelist size
     fun getStageListSize(): Int {

@@ -1,25 +1,14 @@
-/*
- * Copyright 2019, The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- */
-
+//
+// Created by MAT on 28FEB2020.
+//
 package com.adaptivehandyapps.ahascenex.model
 
 import android.net.Uri
 import android.os.Parcelable
 import kotlinx.android.parcel.Parcelize
+import androidx.room.ColumnInfo
+import androidx.room.Entity
+import androidx.room.PrimaryKey
 
 enum class StageType(val value: String) {
     SCENE_TYPE("scene"),
@@ -29,12 +18,20 @@ enum class StageType(val value: String) {
 }
 
 @Parcelize
+@Entity(tableName = "stage_model_table")
 data class StageModel(
-    var id: String = "nada",
+    @PrimaryKey(autoGenerate = true)
+    var tableId: Long = 0L,
+
+    @ColumnInfo(name = "nickname")
+    var nickname: String = "nada",
 //        @Json(name = "img_src") val imgSrcUrl: String,
 //    var sceneSrcUrl: Uri? = null,
+    @ColumnInfo(name = "scene_src_url")
     var sceneSrcUrl: String = "nada",
+    @ColumnInfo(name = "type")
     var type: String = "nada",
+    @ColumnInfo(name = "label")
     var label: String = "nada") : Parcelable {
 
     val isScene
