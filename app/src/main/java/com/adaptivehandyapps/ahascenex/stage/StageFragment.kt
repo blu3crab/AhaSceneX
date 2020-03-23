@@ -25,6 +25,7 @@ import androidx.navigation.findNavController
 import androidx.navigation.fragment.findNavController
 import com.adaptivehandyapps.ahascenex.R
 import com.adaptivehandyapps.ahascenex.databinding.FragmentStageBinding
+import com.adaptivehandyapps.ahascenex.model.StageDatabase
 import com.adaptivehandyapps.ahascenex.model.StageModel
 import com.adaptivehandyapps.ahascenex.model.StageType
 
@@ -59,12 +60,14 @@ class StageFragment : Fragment() {
         // This is necessary so that the binding can observe LiveData updates.
         binding.setLifecycleOwner(this)
 
-        // for Room
+        // Room: application & database for viewmodel instantiation
         //val application = requireNotNull(this.activity).application
-        application = requireNotNull(this.activity).application
+        application = requireNotNull(this.activity).application     // application used for permissions
+
+        val dataSource = StageDatabase.getInstance(application).stageDatabaseDao
 
         // reference to the ViewModel associated with this fragment
-        val viewModelFactory = StageViewModelFactory()
+        val viewModelFactory = StageViewModelFactory(dataSource, application)
         stageViewModel = ViewModelProvider(this, viewModelFactory).get(StageViewModel::class.java)
 
         // To use the View Model with data binding, you have to explicitly

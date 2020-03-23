@@ -4,6 +4,7 @@
 package com.adaptivehandyapps.ahascenex.model
 
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
@@ -28,5 +29,6 @@ interface StageDatabaseDao {
     fun getLast(): StageModel?
 
     @Query("SELECT * FROM stage_model_table ORDER BY tableId DESC")
-    fun getAll(): LiveData<List<StageModel>>
+//    fun getAll(): MutableLiveData<MutableList<StageModel>>
+    fun getAll(): MutableList<StageModel>
 }
