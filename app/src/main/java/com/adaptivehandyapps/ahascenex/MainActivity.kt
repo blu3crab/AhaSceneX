@@ -22,19 +22,13 @@ import kotlinx.android.synthetic.main.activity_main.*
 class MainActivity : AppCompatActivity() {
     private val TAG = "MainActivity"
 
-//    val CLEAR_DB = true
-
     var PERMISSION_CODE_READ = 1001
     var PERMISSION_CODE_WRITE = 1002
 
+    ///////////////////////////////////////////////////////////////////////////
+    // life cycle
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-//        val dataSource = StageDatabase.getInstance(application).stageDatabaseDao
-//        if (CLEAR_DB) {
-//            dataSource.clear()
-//            Log.d(TAG, "datasource cleared...")
-//        }
 
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
@@ -43,11 +37,8 @@ class MainActivity : AppCompatActivity() {
             Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
                     .setAction("Action", null).show()
         }
-
-
         // check for permissions
         checkPermissionForImage()
-
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -71,6 +62,8 @@ class MainActivity : AppCompatActivity() {
         Log.d(TAG, "onSaveInstanceState invoked...")
     }
 
+    ///////////////////////////////////////////////////////////////////////////
+    // permissions
     private fun checkPermissionForImage() {
         Log.d(TAG, "checking permissions...")
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -109,5 +102,5 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
-
+    ///////////////////////////////////////////////////////////////////////////
 }

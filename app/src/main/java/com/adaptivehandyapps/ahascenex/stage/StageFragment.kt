@@ -38,10 +38,6 @@ class StageFragment : Fragment() {
     private lateinit var application : Application
 
     var IMAGE_PICK_CODE = 1000
-    var PERMISSION_CODE_READ = 1001
-    var PERMISSION_CODE_WRITE = 1002
-
-//    val CLEAR_DB = true
 
     private lateinit var stageViewModel: StageViewModel
     private lateinit var binding: FragmentStageBinding
@@ -65,10 +61,6 @@ class StageFragment : Fragment() {
         application = requireNotNull(this.activity).application     // application used for permissions
 
         val dataSource = StageDatabase.getInstance(application).stageDatabaseDao
-//        if (CLEAR_DB) {
-//            dataSource.clear()    // EXCEPTION launching DB in main thread
-//            Log.d(TAG, "datasource cleared...")
-//        }
 
         // reference to the ViewModel associated with this fragment
         val viewModelFactory = StageViewModelFactory(dataSource, application)
@@ -156,39 +148,6 @@ class StageFragment : Fragment() {
         }
 
     }
-
-//    private fun checkPermissionForImage() {
-//        Log.d(TAG, "checking permissions...")
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-//            // if READ or WRITE permissions denied, request WRITE as it will bring along READ
-//            if ((checkSelfPermission(application, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) ||
-//                (checkSelfPermission(application, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED)){
-//                Log.d(TAG, "requesting permissions...")
-//                val permission = arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-//                requestPermissions(permission, PERMISSION_CODE_WRITE)
-//            }
-//        }
-//    }
-//
-//    override fun onRequestPermissionsResult(requestCode: Int,
-//                                            permissions: Array<String>, grantResults: IntArray) {
-//        Log.d(TAG, "onRequestPermissionsResult code " + requestCode)
-//        when (requestCode) {
-//            PERMISSION_CODE_WRITE -> if (grantResults.size > 0
-//                && grantResults[0] == PackageManager.PERMISSION_GRANTED
-//            ) {
-//                Toast.makeText(context, "Write Permission Granted!", Toast.LENGTH_SHORT)
-//                    .show()
-//            } else {
-//                Toast.makeText(context, "Write Permission Denied!", Toast.LENGTH_SHORT)
-//                    .show()
-//                // kill app if denied
-//                Log.d(TAG, "onRequestPermissionsResult denied - finishAndRemoveTask...")
-//                //getActivity()?.finish(); // kills fragment not activity
-//                getActivity()?.finishAndRemoveTask()    // kills activity
-//            }
-//        }
-//    }
 
     private fun pickImageFromGallery() {
         val intent = Intent(Intent.ACTION_PICK)

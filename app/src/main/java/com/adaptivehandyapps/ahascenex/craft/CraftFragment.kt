@@ -34,9 +34,6 @@ import com.bumptech.glide.request.RequestOptions
 class CraftFragment : Fragment() {
     private val TAG = "CraftFragment"
 
-    var PERMISSION_CODE_READ = 1001
-    var PERMISSION_CODE_WRITE = 1002
-
     // for Room & permissions
     private lateinit var application : Application
 
@@ -96,48 +93,13 @@ class CraftFragment : Fragment() {
             findNavController().navigate(R.id.action_CraftFragment_to_StageFragment)
         }
 
+        // show scene
         val imgView = view.findViewById<ImageView>(R.id.imageview_scene)
         val imgUrl = stageModel.sceneSrcUrl
         val imgUri = imgUrl.toUri()
 
-//        checkPermissionForImage()
-
-        // show scene
         showScene(imgView, imgUri)
     }
-
-//    private fun checkPermissionForImage() {
-//        Log.d(TAG, "checking permissions...")
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-//            // if READ or WRITE permissions denied, request WRITE as it will bring along READ
-//            if ((checkSelfPermission(application, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) ||
-//                (checkSelfPermission(application, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED)){
-//                Log.d(TAG, "requesting permissions...")
-//                val permission = arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-//                requestPermissions(permission, PERMISSION_CODE_WRITE)
-//            }
-//        }
-//    }
-//
-//    override fun onRequestPermissionsResult(requestCode: Int,
-//                                            permissions: Array<String>, grantResults: IntArray) {
-//        Log.d(TAG, "onRequestPermissionsResult code " + requestCode)
-//        when (requestCode) {
-//            PERMISSION_CODE_WRITE -> if (grantResults.size > 0
-//                && grantResults[0] == PackageManager.PERMISSION_GRANTED
-//            ) {
-//                Toast.makeText(context, "Write Permission Granted!", Toast.LENGTH_SHORT)
-//                    .show()
-//            } else {
-//                Toast.makeText(context, "Write Permission Denied!", Toast.LENGTH_SHORT)
-//                    .show()
-//                // kill app if denied
-//                Log.d(TAG, "onRequestPermissionsResult denied - finishAndRemoveTask...")
-//                //getActivity()?.finish(); // kills fragment not activity
-//                activity?.finishAndRemoveTask()    // kills activity
-//            }
-//        }
-//    }
 
     fun showScene(imgView: ImageView, imgUri: Uri) {
         try {

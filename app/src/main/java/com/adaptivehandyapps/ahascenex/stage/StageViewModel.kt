@@ -23,9 +23,6 @@ class StageViewModel ( val database: StageDatabaseDao,
 {
     private val TAG = "StageViewModel"
 
-//    //val CLEAR_DB = true
-//    val CLEAR_DB = false
-
     // coroutines
     private var viewModelJob = Job()
     private val uiScope = CoroutineScope(Dispatchers.Main + viewModelJob)
@@ -53,16 +50,10 @@ class StageViewModel ( val database: StageDatabaseDao,
         //setTestStageList()
         //getStageList(StageType.ALL_TYPE)
 
-//        if (!CLEAR_DB) {
-            // get first stage model from DB
-            initializeStageModel()
-            // get stage list from DB
-            initializeStageList()
-//        }
-//        else {
-//            clearStageList()
-//        }
-
+        // get first stage model from DB
+        initializeStageModel()
+        // get stage list from DB
+        initializeStageList()
     }
     ///////////////////////////////////////////////////////////////////////////
     // coroutines: stage model
@@ -99,7 +90,7 @@ class StageViewModel ( val database: StageDatabaseDao,
     private fun initializeStageModel() {
         uiScope.launch {
             activeStageModel.value = getStageModelFromDatabase()
-            Log.d(TAG, "initializeStageModel " + toTerseString(activeStageModel.value))
+            Log.d(TAG, "initializeStageModel " + toString(activeStageModel.value, true))
         }
     }
 
@@ -152,7 +143,7 @@ class StageViewModel ( val database: StageDatabaseDao,
         }
         else {
             stageModel.nickname = getNextStageModelNickname().toString()
-            Log.d(TAG, "addStageModel " + toTerseString(stageModel))
+            Log.d(TAG, "addStageModel " + toString(stageModel, false))
             _stageList.value?.add(stageModel)
             inserted = true
         }
@@ -161,7 +152,7 @@ class StageViewModel ( val database: StageDatabaseDao,
             uiScope.launch {
                 insert(stageModel)
                 activeStageModel.value = getStageModelFromDatabase()
-                Log.d(TAG, "addStageModel DB insert " + toTerseString(activeStageModel.value))
+                Log.d(TAG, "addStageModel DB insert " + toString(activeStageModel.value, false))
             }
 
         }
@@ -170,7 +161,7 @@ class StageViewModel ( val database: StageDatabaseDao,
         //list?.let {
         // iterate through stagelist
         for (stageModel in _stageList.value!!.listIterator()) {
-            Log.d(TAG, toTerseString(stageModel))
+            Log.d(TAG, toString(stageModel))    // terse mode parameter unnecessary, defaults to true
         }
         // mark list ready
         _status.value = StageListStatus.READY
@@ -200,11 +191,15 @@ class StageViewModel ( val database: StageDatabaseDao,
         val size = _stageList.value!!.size
         return size
     }
-    fun toTerseString(stageModel: StageModel?): String {
+    fun toString(stageModel: StageModel?, terse: Boolean = false): String {
         stageModel?.let {
-            return "stageModel nickname# " + stageModel.nickname +" label " + stageModel.label
+            if (terse) {
+                return "stageModel nickname# " + stageModel.nickname + " label " + stageModel.label
+            }
+            return "stageModel id# " + stageModel.nickname + " = " + stageModel.label +
+                    ", type " + stageModel.type + ", uri " + stageModel.sceneSrcUrl
         }
         return "stageModel NULL... "
-
     }
+
 }
