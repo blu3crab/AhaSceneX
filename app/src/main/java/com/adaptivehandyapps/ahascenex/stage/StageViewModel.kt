@@ -22,6 +22,10 @@ class StageViewModel ( val database: StageDatabaseDao,
                        application: Application) : AndroidViewModel(application)
 {
     private val TAG = "StageViewModel"
+
+//    //val CLEAR_DB = true
+//    val CLEAR_DB = false
+
     // coroutines
     private var viewModelJob = Job()
     private val uiScope = CoroutineScope(Dispatchers.Main + viewModelJob)
@@ -49,13 +53,31 @@ class StageViewModel ( val database: StageDatabaseDao,
         //setTestStageList()
         //getStageList(StageType.ALL_TYPE)
 
-        // get first stage model from DB
-        initializeStageModel()
-        // get stage list from DB
-        initializeStageList()
+//        if (!CLEAR_DB) {
+            // get first stage model from DB
+            initializeStageModel()
+            // get stage list from DB
+            initializeStageList()
+//        }
+//        else {
+//            clearStageList()
+//        }
+
     }
     ///////////////////////////////////////////////////////////////////////////
     // coroutines: stage model
+    fun clearStageList() {
+        uiScope.launch {
+            clearStageListFromDatabase()
+            Log.d(TAG, "clearStageListFromDatabase...")
+        }
+    }
+
+    private suspend fun clearStageListFromDatabase() {
+        return withContext(Dispatchers.IO) {
+            database.clear()
+        }
+    }
     private fun initializeStageList() {
         uiScope.launch {
             _stageList.value = getStageListFromDatabase()

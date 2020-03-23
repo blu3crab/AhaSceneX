@@ -12,17 +12,17 @@
         tools:layout="@layout/fragment_stage">
 
         <action
-            android:id="@+id/action_StageFragment_to_MakeFragment"
-            app:destination="@id/MakeFragment" />
+            android:id="@+id/action_StageFragment_to_CraftFragment"
+            app:destination="@id/CraftFragment" />
     </fragment>
     <fragment
-        android:id="@+id/MakeFragment"
-        android:name="com.adaptivehandyapps.ahascenex.make.MakeFragment"
-        android:label="@string/make_fragment_label"
-        tools:layout="@layout/fragment_make">
+        android:id="@+id/CraftFragment"
+        android:name="com.adaptivehandyapps.ahascenex.craft.CraftFragment"
+        android:label="@string/craft_fragment_label"
+        tools:layout="@layout/fragment_craft">
 
         <action
-            android:id="@+id/action_MakeFragment_to_StageFragment"
+            android:id="@+id/action_CraftFragment_to_StageFragment"
             app:destination="@id/StageFragment" />
         <argument
             android:name="testInt"

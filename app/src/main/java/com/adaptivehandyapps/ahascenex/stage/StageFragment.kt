@@ -22,7 +22,6 @@ import androidx.core.content.ContextCompat.checkSelfPermission
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.findNavController
-import androidx.navigation.fragment.findNavController
 import com.adaptivehandyapps.ahascenex.R
 import com.adaptivehandyapps.ahascenex.databinding.FragmentStageBinding
 import com.adaptivehandyapps.ahascenex.model.StageDatabase
@@ -35,13 +34,14 @@ import com.adaptivehandyapps.ahascenex.model.StageType
 class StageFragment : Fragment() {
     private val TAG = "StageFragment"
 
-    // for Room
+    // for Room & permissions
     private lateinit var application : Application
 
     var IMAGE_PICK_CODE = 1000
     var PERMISSION_CODE_READ = 1001
     var PERMISSION_CODE_WRITE = 1002
 
+//    val CLEAR_DB = true
 
     private lateinit var stageViewModel: StageViewModel
     private lateinit var binding: FragmentStageBinding
@@ -65,6 +65,10 @@ class StageFragment : Fragment() {
         application = requireNotNull(this.activity).application     // application used for permissions
 
         val dataSource = StageDatabase.getInstance(application).stageDatabaseDao
+//        if (CLEAR_DB) {
+//            dataSource.clear()    // EXCEPTION launching DB in main thread
+//            Log.d(TAG, "datasource cleared...")
+//        }
 
         // reference to the ViewModel associated with this fragment
         val viewModelFactory = StageViewModelFactory(dataSource, application)
@@ -98,7 +102,7 @@ class StageFragment : Fragment() {
             view!!.findNavController()
                 .navigate(
                     StageFragmentDirections
-                    .actionStageFragmentToMakeFragment(testInt, testString, stageModel))
+                    .actionStageFragmentToCraftFragment(testInt, testString, stageModel))
 //                        stageModelId, stageModelLabel, stageModelType, stageModelSceneSrcUrl))
         })
         // retain instance
@@ -113,11 +117,26 @@ class StageFragment : Fragment() {
         savedInstanceState?.let {
             Log.d(TAG, "savedInstanceState not NULL...")
         }
-        view.findViewById<Button>(R.id.button_next).setOnClickListener {
+        // GALLERY launches photo gallery
+        view.findViewById<Button>(R.id.button_gallery).setOnClickListener {
+            Log.d(TAG, "button_gallery setOnClickListener...")
+//            // check for permissions
+//            checkPermissionForImage()
+            // launch Gallery intent to select photo
+            pickImageFromGallery()
+        }
+        // CLEAR clears DB
+        view.findViewById<Button>(R.id.button_clear).setOnClickListener {
+            Log.d(TAG, "button_clear setOnClickListener...")
+            stageViewModel.clearStageList()
+        }
+        // CRAFT launches CraftFragment with empty StageModel
+        view.findViewById<Button>(R.id.button_craft).setOnClickListener {
             val testInt = 256
             val testString = "nada"
+            val stageModel: StageModel = StageModel()
             // extract stagemodel element by element
-            val stageModel = stageViewModel.stageList.value!!.get(0)
+            //val stageModel = stageViewModel.stageList.value!!.get(0)
 //            var stageModelId = "nada"
 //            var stageModelLabel = "nada"
 //            var stageModelType = "nada"
@@ -131,56 +150,50 @@ class StageFragment : Fragment() {
             view!!.findNavController()
                 .navigate(
                     StageFragmentDirections
-                        .actionStageFragmentToMakeFragment(testInt, testString, stageModel))
+                        .actionStageFragmentToCraftFragment(testInt, testString, stageModel))
 //                            stageModelId, stageModelLabel, stageModelType, stageModelSceneSrcUrl))
 //                        .actionStageFragmentToMakeFragment(testInt, testString))
         }
 
-        view.findViewById<Button>(R.id.button_gallery).setOnClickListener {
-            Log.d(TAG, "button_gallery setOnClickListener...")
-            // check for permissions
-            checkPermissionForImage()
-            // launch Gallery intent to select photo
-            pickImageFromGallery()
-        }
     }
 
-    private fun checkPermissionForImage() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            // if READ or WRITE permissions denied, request WRITE as it will bring along READ
-            if ((checkSelfPermission(application, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) ||
-                (checkSelfPermission(application, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED)){
-                Log.d(TAG, "requesting permissions...")
-                val permission = arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                requestPermissions(permission, PERMISSION_CODE_WRITE)
-            }
-        }
-    }
-
-    override fun onRequestPermissionsResult(requestCode: Int,
-                                            permissions: Array<String>, grantResults: IntArray) {
-        Log.d(TAG, "onRequestPermissionsResult code " + requestCode)
-        when (requestCode) {
-            PERMISSION_CODE_WRITE -> if (grantResults.size > 0
-                && grantResults[0] == PackageManager.PERMISSION_GRANTED
-            ) {
-                Toast.makeText(context, "Write Permission Granted!", Toast.LENGTH_SHORT)
-                    .show()
-            } else {
-                Toast.makeText(context, "Write Permission Denied!", Toast.LENGTH_SHORT)
-                    .show()
-                // kill app if denied
-                Log.d(TAG, "onRequestPermissionsResult denied - finishAndRemoveTask...")
-                //getActivity()?.finish(); // kills fragment not activity
-                getActivity()?.finishAndRemoveTask()    // kills activity
-            }
-        }
-    }
+//    private fun checkPermissionForImage() {
+//        Log.d(TAG, "checking permissions...")
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+//            // if READ or WRITE permissions denied, request WRITE as it will bring along READ
+//            if ((checkSelfPermission(application, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) ||
+//                (checkSelfPermission(application, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED)){
+//                Log.d(TAG, "requesting permissions...")
+//                val permission = arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+//                requestPermissions(permission, PERMISSION_CODE_WRITE)
+//            }
+//        }
+//    }
+//
+//    override fun onRequestPermissionsResult(requestCode: Int,
+//                                            permissions: Array<String>, grantResults: IntArray) {
+//        Log.d(TAG, "onRequestPermissionsResult code " + requestCode)
+//        when (requestCode) {
+//            PERMISSION_CODE_WRITE -> if (grantResults.size > 0
+//                && grantResults[0] == PackageManager.PERMISSION_GRANTED
+//            ) {
+//                Toast.makeText(context, "Write Permission Granted!", Toast.LENGTH_SHORT)
+//                    .show()
+//            } else {
+//                Toast.makeText(context, "Write Permission Denied!", Toast.LENGTH_SHORT)
+//                    .show()
+//                // kill app if denied
+//                Log.d(TAG, "onRequestPermissionsResult denied - finishAndRemoveTask...")
+//                //getActivity()?.finish(); // kills fragment not activity
+//                getActivity()?.finishAndRemoveTask()    // kills activity
+//            }
+//        }
+//    }
 
     private fun pickImageFromGallery() {
+        val intent = Intent(Intent.ACTION_PICK)
         // ACTION_OPEN_DOCUMENT retains permissions for later display as well as launching into "local" phone gallery
-        //val intent = Intent(Intent.ACTION_PICK)
-        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT)
+        //val intent = Intent(Intent.ACTION_OPEN_DOCUMENT)
         intent.type = "image/*"
         startActivityForResult(intent, IMAGE_PICK_CODE) // GIVE AN INTEGER VALUE FOR IMAGE_PICK_CODE LIKE 1000
     }
