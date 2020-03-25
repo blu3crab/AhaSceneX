@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Wrapping the layout into /layout to make it available with data binding. -->
-<layout>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <!-- Data to make available to the XML via data binding. In this case,
          the whole ViewModel, so that we can access the LiveData,
@@ -11,9 +13,7 @@
             type="com.adaptivehandyapps.ahascenex.craft.CraftViewModel" />
     </data>
 
-    <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:app="http://schemas.android.com/apk/res-auto"
-        xmlns:tools="http://schemas.android.com/tools"
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         tools:context=".craft.CraftFragment">
@@ -29,29 +29,72 @@
             android:adjustViewBounds="true"
             android:scaleType="fitCenter"
             android:src="@drawable/ic_broken_image"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
-
+        <!--
         <TextView
             android:id="@+id/textview_second"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/craft_fragment_label"
-            app:layout_constraintBottom_toTopOf="@id/button_stage"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <Button
-            android:id="@+id/button_stage"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/stage_button_label"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/textview_second" />
+            app:layout_constraintTop_toTopOf="parent" /> -->
+
+        <EditText
+            android:id="@+id/edittext_scene_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="64dp"
+            android:ems="10"
+            android:hint="Scene Description"
+            android:inputType="textMultiLine"
+            android:textAlignment="center"
+            android:textStyle="italic"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/imageview_scene"
+            app:layout_constraintVertical_bias="0.152" />
+
+        <Button
+            android:id="@+id/button_save_stage"
+            android:text="@string/save_stage_button_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toBottomOf="@id/imageview_scene"
+            app:layout_constraintHorizontal_bias="0.087"
+            app:layout_constraintLeft_toLeftOf="@id/imageview_scene"
+            app:layout_constraintRight_toRightOf="@id/imageview_scene"
+            app:layout_constraintTop_toTopOf="@id/imageview_scene"
+            app:layout_constraintVertical_bias="0.048" />
+
+        <Button
+            android:id="@+id/button_clear_stage"
+            android:text="@string/clear_stage_button_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toBottomOf="@id/imageview_scene"
+            app:layout_constraintHorizontal_bias="0.498"
+            app:layout_constraintLeft_toLeftOf="@id/imageview_scene"
+            app:layout_constraintRight_toRightOf="@id/imageview_scene"
+            app:layout_constraintTop_toTopOf="@id/imageview_scene"
+            app:layout_constraintVertical_bias="0.048" />
+
+        <Button
+            android:id="@+id/button_discard_stage"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/discard_stage_button_label"
+            app:layout_constraintBottom_toBottomOf="@id/imageview_scene"
+            app:layout_constraintHorizontal_bias="0.895"
+            app:layout_constraintLeft_toLeftOf="@id/imageview_scene"
+            app:layout_constraintRight_toRightOf="@id/imageview_scene"
+            app:layout_constraintTop_toTopOf="@id/imageview_scene"
+            app:layout_constraintVertical_bias="0.048" />
+
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

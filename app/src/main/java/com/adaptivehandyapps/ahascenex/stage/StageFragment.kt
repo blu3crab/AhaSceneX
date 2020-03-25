@@ -29,7 +29,7 @@ import com.adaptivehandyapps.ahascenex.model.StageModel
 import com.adaptivehandyapps.ahascenex.model.StageType
 
 /**
- * A simple [Fragment] subclass as the default destination in the navigation.
+ * [Fragment] subclass as the default destination in the navigation.
  */
 class StageFragment : Fragment() {
     private val TAG = "StageFragment"
@@ -150,9 +150,12 @@ class StageFragment : Fragment() {
     }
 
     private fun pickImageFromGallery() {
+        // ACTION_PICK launches into Google Photos requires READ/WRITE permissions or denied on orientation changes
         val intent = Intent(Intent.ACTION_PICK)
         // ACTION_OPEN_DOCUMENT retains permissions for later display as well as launching into "local" phone gallery
         //val intent = Intent(Intent.ACTION_OPEN_DOCUMENT)
+        //val intent = Intent(Intent.ACTION_GET_CONTENT)    // local
+        //val intent = Intent(Intent.ACTION_CHOOSER)
         intent.type = "image/*"
         startActivityForResult(intent, IMAGE_PICK_CODE) // GIVE AN INTEGER VALUE FOR IMAGE_PICK_CODE LIKE 1000
     }

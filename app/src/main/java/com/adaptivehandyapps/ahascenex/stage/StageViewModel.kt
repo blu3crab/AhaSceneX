@@ -8,6 +8,7 @@ import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import com.adaptivehandyapps.ahascenex.formatStageModel
 import com.adaptivehandyapps.ahascenex.model.StageDatabaseDao
 import com.adaptivehandyapps.ahascenex.model.StageModel
 import com.adaptivehandyapps.ahascenex.model.StageType
@@ -26,6 +27,7 @@ class StageViewModel ( val database: StageDatabaseDao,
     // coroutines
     private var viewModelJob = Job()
     private val uiScope = CoroutineScope(Dispatchers.Main + viewModelJob)
+
     private var activeStageModel = MutableLiveData<StageModel?>()
     // model
     private var stageModelNickname = 999
@@ -90,7 +92,7 @@ class StageViewModel ( val database: StageDatabaseDao,
     private fun initializeStageModel() {
         uiScope.launch {
             activeStageModel.value = getStageModelFromDatabase()
-            Log.d(TAG, "initializeStageModel " + toString(activeStageModel.value, true))
+            Log.d(TAG, "initializeStageModel " + formatStageModel(activeStageModel.value, true))
         }
     }
 
@@ -143,7 +145,7 @@ class StageViewModel ( val database: StageDatabaseDao,
         }
         else {
             stageModel.nickname = getNextStageModelNickname().toString()
-            Log.d(TAG, "addStageModel " + toString(stageModel, false))
+            Log.d(TAG, "addStageModel " + formatStageModel(stageModel, false))
             _stageList.value?.add(stageModel)
             inserted = true
         }
@@ -152,7 +154,7 @@ class StageViewModel ( val database: StageDatabaseDao,
             uiScope.launch {
                 insert(stageModel)
                 activeStageModel.value = getStageModelFromDatabase()
-                Log.d(TAG, "addStageModel DB insert " + toString(activeStageModel.value, false))
+                Log.d(TAG, "addStageModel DB insert " + formatStageModel(activeStageModel.value, false))
             }
 
         }
@@ -161,7 +163,7 @@ class StageViewModel ( val database: StageDatabaseDao,
         //list?.let {
         // iterate through stagelist
         for (stageModel in _stageList.value!!.listIterator()) {
-            Log.d(TAG, toString(stageModel))    // terse mode parameter unnecessary, defaults to true
+            Log.d(TAG, formatStageModel(stageModel))    // terse mode parameter unnecessary, defaults to true
         }
         // mark list ready
         _status.value = StageListStatus.READY
@@ -191,15 +193,15 @@ class StageViewModel ( val database: StageDatabaseDao,
         val size = _stageList.value!!.size
         return size
     }
-    fun toString(stageModel: StageModel?, terse: Boolean = false): String {
-        stageModel?.let {
-            if (terse) {
-                return "stageModel nickname# " + stageModel.nickname + " label " + stageModel.label
-            }
-            return "stageModel id# " + stageModel.nickname + " = " + stageModel.label +
-                    ", type " + stageModel.type + ", uri " + stageModel.sceneSrcUrl
-        }
-        return "stageModel NULL... "
-    }
+//    fun toString(stageModel: StageModel?, terse: Boolean = false): String {
+//        stageModel?.let {
+//            if (terse) {
+//                return "stageModel nickname# " + stageModel.nickname + " label " + stageModel.label
+//            }
+//            return "stageModel id# " + stageModel.nickname + " = " + stageModel.label +
+//                    ", type " + stageModel.type + ", uri " + stageModel.sceneSrcUrl
+//        }
+//        return "stageModel NULL... "
+//    }
 
 }

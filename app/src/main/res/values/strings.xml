@@ -9,7 +9,9 @@
     <string name="clear_button_label">Clear DB</string>
     <string name="craft_button_label">Craft Stage</string>
 
-    <string name="stage_button_label">Stage Grid</string>
+    <string name="save_stage_button_label">Save</string>
+    <string name="clear_stage_button_label">Clear</string>
+    <string name="discard_stage_button_label">Discard</string>
 <!--
     <string name="hello_first_fragment">Hello first fragment</string>
     <string name="hello_second_fragment">Hello second fragment. Arg: %1$s</string>

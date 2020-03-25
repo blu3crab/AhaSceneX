@@ -1,10 +1,7 @@
 package com.adaptivehandyapps.ahascenex.craft
 
-import android.Manifest
 import android.app.Application
-import android.content.pm.PackageManager
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import androidx.fragment.app.Fragment
@@ -12,13 +9,12 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.EditText
 import android.widget.ImageView
 import android.widget.Toast
 //import androidx.core.content.PermissionChecker.checkSelfPermission
-import androidx.core.content.ContextCompat.checkSelfPermission
 import androidx.core.net.toUri
 import androidx.databinding.DataBindingUtil
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import com.adaptivehandyapps.ahascenex.R
@@ -35,13 +31,15 @@ class CraftFragment : Fragment() {
     private val TAG = "CraftFragment"
 
     // for Room & permissions
-    private lateinit var application : Application
+    //private lateinit var application : Application
 
     private lateinit var craftViewModel: CraftViewModel
     private lateinit var binding: FragmentCraftBinding
 
 //    private lateinit var stageModel: StageModel
     private var stageModel: StageModel = StageModel()
+
+    //private var view : View
 
     override fun onCreateView(
             inflater: LayoutInflater, container: ViewGroup?,
@@ -55,13 +53,13 @@ class CraftFragment : Fragment() {
         binding.setLifecycleOwner(this)
 
         // Room: application & database for viewmodel instantiation
-        //val application = requireNotNull(this.activity).application
-        application = requireNotNull(this.activity).application     // application used for permissions
+        val application = requireNotNull(this.activity).application
+        //application = requireNotNull(this.activity).application     // application used for permissions
 
         val dataSource = StageDatabase.getInstance(application).stageDatabaseDao
 
         // reference to the ViewModel associated with this fragment
-        val viewModelFactory = CraftViewModelFactory()
+        val viewModelFactory = CraftViewModelFactory(dataSource, application)
         craftViewModel = ViewModelProvider(this, viewModelFactory).get(CraftViewModel::class.java)
 
         // To use the View Model with data binding, you have to explicitly
@@ -88,8 +86,11 @@ class CraftFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        view.findViewById<Button>(R.id.button_stage).setOnClickListener {
+        // stage button navigates back to stage fragment
+        view.findViewById<Button>(R.id.button_save_stage).setOnClickListener {
+            // save stage model
+            saveStageModel()
+            // navigate back to stage frag
             findNavController().navigate(R.id.action_CraftFragment_to_StageFragment)
         }
 
@@ -99,8 +100,21 @@ class CraftFragment : Fragment() {
         val imgUri = imgUrl.toUri()
 
         showScene(imgView, imgUri)
-    }
 
+        val editTextSceneLabel = view.findViewById<EditText>(R.id.edittext_scene_label)
+        editTextSceneLabel.setText(stageModel.label)
+
+    }
+    ///////////////////////////////////////////////////////////////////////////
+    fun saveStageModel() {
+        // save label
+        val editText = view?.findViewById<EditText>(R.id.edittext_scene_label)
+        val label = editText?.text
+        Log.d(TAG, "edittext_scene_label " + label + "...")
+        stageModel.label = label.toString()
+        craftViewModel.updateStageModel()
+    }
+    ///////////////////////////////////////////////////////////////////////////
     fun showScene(imgView: ImageView, imgUri: Uri) {
         try {
             Glide.with(imgView.context)
@@ -115,6 +129,31 @@ class CraftFragment : Fragment() {
         catch (ex : Exception) {
             Log.e("BindingAdapter", "scenex Glide exception! " + ex.localizedMessage)
         }
-
     }
+    ///////////////////////////////////////////////////////////////////////////
+    override fun onStart() {
+        Log.i(TAG, "onStart invoked...")
+        super.onStart()
+    }
+    override fun onResume() {
+        Log.i(TAG, "onResume invoked...")
+        super.onResume()
+    }
+    override fun onPause() {
+        Log.i(TAG, "onPause invoked...")
+        super.onPause()
+    }
+    override fun onStop() {
+        Log.i(TAG, "onStop invoked...")
+        super.onStop()
+    }
+    override fun onDestroyView() {
+        Log.i(TAG, "onDestroyView invoked...")
+        super.onDestroyView()
+    }
+    override fun onDetach() {
+        Log.i(TAG, "onDetach invoked...")
+        super.onDetach()
+    }
+    ///////////////////////////////////////////////////////////////////////////
 }

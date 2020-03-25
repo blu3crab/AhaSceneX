@@ -77,7 +77,8 @@ class MainActivity : AppCompatActivity() {
                     Manifest.permission.WRITE_EXTERNAL_STORAGE
                 ) != PackageManager.PERMISSION_GRANTED)){
                 Log.d(TAG, "requesting permissions...")
-                val permission = arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+//                val permission = arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                val permission = arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE)
                 requestPermissions(permission, PERMISSION_CODE_WRITE)
             }
         }
@@ -94,6 +95,19 @@ class MainActivity : AppCompatActivity() {
                     .show()
             } else {
                 Toast.makeText(this, "Write Permission Denied!", Toast.LENGTH_SHORT)
+                    .show()
+                // kill app if denied
+                Log.d(TAG, "onRequestPermissionsResult denied - finishAndRemoveTask...")
+                //getActivity()?.finish(); // kills fragment not activity
+                this.finishAndRemoveTask()    // kills activity
+            }
+            PERMISSION_CODE_READ -> if (grantResults.size > 0
+                && grantResults[0] == PackageManager.PERMISSION_GRANTED
+            ) {
+                Toast.makeText(this, "Read Permission Granted!", Toast.LENGTH_SHORT)
+                    .show()
+            } else {
+                Toast.makeText(this, "Read Permission Denied!", Toast.LENGTH_SHORT)
                     .show()
                 // kill app if denied
                 Log.d(TAG, "onRequestPermissionsResult denied - finishAndRemoveTask...")
