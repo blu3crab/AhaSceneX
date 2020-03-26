@@ -1,6 +1,10 @@
+///////////////////////////////////////////////////////////////////////////
+// StageCraft: the ART of creating compelling ILLUSIONS
+//
+// Created by MAT on 20MAR2020
+//
 package com.adaptivehandyapps.ahascenex.craft
 
-import android.app.Application
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
@@ -20,7 +24,6 @@ import androidx.navigation.fragment.findNavController
 import com.adaptivehandyapps.ahascenex.R
 import com.adaptivehandyapps.ahascenex.databinding.FragmentCraftBinding
 import com.adaptivehandyapps.ahascenex.model.StageDatabase
-import com.adaptivehandyapps.ahascenex.model.StageModel
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
 
@@ -37,7 +40,7 @@ class CraftFragment : Fragment() {
     private lateinit var binding: FragmentCraftBinding
 
 //    private lateinit var stageModel: StageModel
-    private var stageModel: StageModel = StageModel()
+//    private var stageModel: StageModel = StageModel()
 
     //private var view : View
 
@@ -62,15 +65,14 @@ class CraftFragment : Fragment() {
         val viewModelFactory = CraftViewModelFactory(dataSource, application)
         craftViewModel = ViewModelProvider(this, viewModelFactory).get(CraftViewModel::class.java)
 
-        // To use the View Model with data binding, you have to explicitly
-        // give the binding object a reference to it.
+        // bind view model
         binding.viewModel = craftViewModel
-
+        // extract stage model from args
         val args = CraftFragmentArgs.fromBundle(arguments!!)
+        val stageModel = args.stageModel
+        // load view model with stage model
+        craftViewModel.loadStageModel(stageModel)
 
-        stageModel = args.stageModel
-
-        craftViewModel.setStageModel(stageModel)
 //        stageModel.id = args.stageModelId
 //        stageModel.label = args.stageModelLabel
 //        stageModel.type = args.stageModelType
@@ -86,49 +88,67 @@ class CraftFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        // stage button navigates back to stage fragment
+        // button_save_stage updates DB then navigates back to stage fragment
         view.findViewById<Button>(R.id.button_save_stage).setOnClickListener {
             // save stage model
             saveStageModel()
             // navigate back to stage frag
             findNavController().navigate(R.id.action_CraftFragment_to_StageFragment)
         }
+        // button_undo_stage restores stage model to previous state
+        view.findViewById<Button>(R.id.button_undo_stage).setOnClickListener {
+            // undo stage model
+            craftViewModel.undoStageModel()
+            craftViewModel.showScene(view)
+        }
+        // button_discard_stage removes the current stage model from the database
+        view.findViewById<Button>(R.id.button_discard_stage).setOnClickListener {
+            // undo stage model
+            craftViewModel.deleteIdFromStageModelDatabase()
+            // navigate back to stage frag
+            findNavController().navigate(R.id.action_CraftFragment_to_StageFragment)
+        }
 
         // show scene
-        val imgView = view.findViewById<ImageView>(R.id.imageview_scene)
-        val imgUrl = stageModel.sceneSrcUrl
-        val imgUri = imgUrl.toUri()
+        craftViewModel.showScene(view)
+//        val imgView = view.findViewById<ImageView>(R.id.imageview_scene)
+//        val imgUrl = craftViewModel.stageModel.value!!.sceneSrcUrl
+//        val imgUri = imgUrl!!.toUri()
 
-        showScene(imgView, imgUri)
-
-        val editTextSceneLabel = view.findViewById<EditText>(R.id.edittext_scene_label)
-        editTextSceneLabel.setText(stageModel.label)
-
+//        craftViewModel.showScene(view, imgView, imgUri)
+//        // show label
+//        val editTextSceneLabel = view.findViewById<EditText>(R.id.edittext_scene_label)
+//        editTextSceneLabel.setText(craftViewModel.stageModel.value!!.label)
     }
+//    ///////////////////////////////////////////////////////////////////////////
+//    fun showScene(view: View, imgView: ImageView, imgUri: Uri) {
+//        // show label
+//        val editTextSceneLabel = view.findViewById<EditText>(R.id.edittext_scene_label)
+//        editTextSceneLabel.setText(craftViewModel.stageModel.value!!.label)
+//        try {
+//            Glide.with(imgView.context)
+//                .load(imgUri)
+//                .apply(
+//                    RequestOptions()
+//                        .placeholder(R.drawable.loading_animation)
+//                        .error(R.drawable.ic_broken_image)
+//                )
+//                .into(imgView)
+//        }
+//        catch (ex : Exception) {
+//            Log.e("BindingAdapter", "scenex Glide exception! " + ex.localizedMessage)
+//        }
+//    }
     ///////////////////////////////////////////////////////////////////////////
     fun saveStageModel() {
         // save label
         val editText = view?.findViewById<EditText>(R.id.edittext_scene_label)
         val label = editText?.text
         Log.d(TAG, "edittext_scene_label " + label + "...")
-        stageModel.label = label.toString()
-        craftViewModel.updateStageModel()
-    }
-    ///////////////////////////////////////////////////////////////////////////
-    fun showScene(imgView: ImageView, imgUri: Uri) {
-        try {
-            Glide.with(imgView.context)
-                .load(imgUri)
-                .apply(
-                    RequestOptions()
-                        .placeholder(R.drawable.loading_animation)
-                        .error(R.drawable.ic_broken_image)
-                )
-                .into(imgView)
-        }
-        catch (ex : Exception) {
-            Log.e("BindingAdapter", "scenex Glide exception! " + ex.localizedMessage)
-        }
+        //craftViewModel.stageModel.value!!.label = label.toString()
+        craftViewModel.updateStageModelLabel(label.toString())
+        // update database
+        craftViewModel.updateStageModelDatabase()
     }
     ///////////////////////////////////////////////////////////////////////////
     override fun onStart() {

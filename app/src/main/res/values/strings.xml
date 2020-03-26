@@ -10,7 +10,7 @@
     <string name="craft_button_label">Craft Stage</string>
 
     <string name="save_stage_button_label">Save</string>
-    <string name="clear_stage_button_label">Clear</string>
+    <string name="undo_stage_button_label">Undo</string>
     <string name="discard_stage_button_label">Discard</string>
 <!--
     <string name="hello_first_fragment">Hello first fragment</string>

@@ -1,3 +1,8 @@
+///////////////////////////////////////////////////////////////////////////
+// StageCraft: the ART of creating compelling ILLUSIONS
+//
+// Created by MAT on 28FEB2020
+//
 package com.adaptivehandyapps.ahascenex.stage
 
 import android.app.Application

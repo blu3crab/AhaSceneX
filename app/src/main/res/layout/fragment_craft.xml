@@ -59,7 +59,6 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/imageview_scene"
             app:layout_constraintVertical_bias="0.152" />
-
         <Button
             android:id="@+id/button_save_stage"
             android:text="@string/save_stage_button_label"
@@ -73,8 +72,8 @@
             app:layout_constraintVertical_bias="0.048" />
 
         <Button
-            android:id="@+id/button_clear_stage"
-            android:text="@string/clear_stage_button_label"
+            android:id="@+id/button_undo_stage"
+            android:text="@string/undo_stage_button_label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             app:layout_constraintBottom_toBottomOf="@id/imageview_scene"
