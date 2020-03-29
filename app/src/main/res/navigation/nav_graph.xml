@@ -24,12 +24,14 @@
         <action
             android:id="@+id/action_CraftFragment_to_StageFragment"
             app:destination="@id/StageFragment" />
+        <!--
         <argument
             android:name="testInt"
             app:argType="integer" />
         <argument
             android:name="testString"
             app:argType="string" />
+            -->
         <argument
             android:name="stageModel"
             app:argType="com.adaptivehandyapps.ahascenex.model.StageModel" />

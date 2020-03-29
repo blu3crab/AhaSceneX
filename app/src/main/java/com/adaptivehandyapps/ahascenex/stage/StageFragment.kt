@@ -37,22 +37,24 @@ class StageFragment : Fragment() {
     private val TAG = "StageFragment"
 
     // for Room & permissions
-    private lateinit var application : Application
+    private lateinit var application: Application
 
     var IMAGE_PICK_CODE = 1000
 
     private lateinit var stageViewModel: StageViewModel
     private lateinit var binding: FragmentStageBinding
+
     ///////////////////////////////////////////////////////////////////////////
     override fun onCreateView(
-            inflater: LayoutInflater, container: ViewGroup?,
-            savedInstanceState: Bundle?
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
     ): View? {
         // get reference to the binding object and inflate the fragment views.
 //        val binding: FragmentStageBinding = DataBindingUtil.inflate(
 //            inflater, R.layout.fragment_stage, container, false)
         binding = DataBindingUtil.inflate(
-            inflater, R.layout.fragment_stage, container, false)
+            inflater, R.layout.fragment_stage, container, false
+        )
 
         // Specify the current activity as the lifecycle owner of the binding.
         // This is necessary so that the binding can observe LiveData updates.
@@ -60,7 +62,8 @@ class StageFragment : Fragment() {
 
         // Room: application & database for viewmodel instantiation
         //val application = requireNotNull(this.activity).application
-        application = requireNotNull(this.activity).application     // application used for permissions
+        application =
+            requireNotNull(this.activity).application     // application used for permissions
 
         val dataSource = StageDatabase.getInstance(application).stageDatabaseDao
 
@@ -76,8 +79,8 @@ class StageFragment : Fragment() {
         binding.sceneListGrid.adapter = SceneGridAdapter(SceneGridAdapter.OnClickListener {
             //viewModel.displayPropertyDetails(it)
             Log.d(TAG, "SceneGridAdapter OnClickListener")
-            val testInt = 256
-            val testString = "nada"
+//            val testInt = 256
+//            val testString = "nada"
 
             // set stagemodel from listener
             val stageModel = it
@@ -96,7 +99,9 @@ class StageFragment : Fragment() {
             view!!.findNavController()
                 .navigate(
                     StageFragmentDirections
-                    .actionStageFragmentToCraftFragment(testInt, testString, stageModel))
+                        .actionStageFragmentToCraftFragment(stageModel)
+                )
+//                .actionStageFragmentToCraftFragment(testInt, testString, stageModel))
 //                        stageModelId, stageModelLabel, stageModelType, stageModelSceneSrcUrl))
         })
         // retain instance
@@ -144,7 +149,9 @@ class StageFragment : Fragment() {
             view!!.findNavController()
                 .navigate(
                     StageFragmentDirections
-                        .actionStageFragmentToCraftFragment(testInt, testString, stageModel))
+                        .actionStageFragmentToCraftFragment(stageModel)
+                )
+//                .actionStageFragmentToCraftFragment(testInt, testString, stageModel)
 //                            stageModelId, stageModelLabel, stageModelType, stageModelSceneSrcUrl))
 //                        .actionStageFragmentToMakeFragment(testInt, testString))
         }
@@ -152,6 +159,7 @@ class StageFragment : Fragment() {
     }
 
     private fun pickImageFromGallery() {
+        // TODO: add Prefs to select image source
         // ACTION_PICK launches into Google Photos requires READ/WRITE permissions or denied on orientation changes
         val intent = Intent(Intent.ACTION_PICK)
         // ACTION_OPEN_DOCUMENT retains permissions for later display as well as launching into "local" phone gallery
@@ -159,7 +167,10 @@ class StageFragment : Fragment() {
         //val intent = Intent(Intent.ACTION_GET_CONTENT)    // local
         //val intent = Intent(Intent.ACTION_CHOOSER)
         intent.type = "image/*"
-        startActivityForResult(intent, IMAGE_PICK_CODE) // GIVE AN INTEGER VALUE FOR IMAGE_PICK_CODE LIKE 1000
+        startActivityForResult(
+            intent,
+            IMAGE_PICK_CODE
+        )
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -182,8 +193,7 @@ class StageFragment : Fragment() {
                         //val position = stageViewModel.stageList.value?.size!!.minus(1)
                         binding.sceneListGrid.adapter?.notifyItemInserted(position)
                         Log.d(TAG, "\nscenex notifyItemInserted at position " + position)
-                    }
-                    else {
+                    } else {
                         binding.sceneListGrid.adapter?.notifyItemChanged(0)
                         Log.d(TAG, "\nscenex notifyItemInserted at position 0")
                     }

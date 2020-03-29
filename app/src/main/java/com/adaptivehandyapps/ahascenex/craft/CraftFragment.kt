@@ -5,27 +5,26 @@
 //
 package com.adaptivehandyapps.ahascenex.craft
 
-import android.net.Uri
+//import androidx.core.content.PermissionChecker.checkSelfPermission
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.util.Log
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.Toast
-//import androidx.core.content.PermissionChecker.checkSelfPermission
-import androidx.core.net.toUri
 import androidx.databinding.DataBindingUtil
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import com.adaptivehandyapps.ahascenex.R
 import com.adaptivehandyapps.ahascenex.databinding.FragmentCraftBinding
+import com.adaptivehandyapps.ahascenex.formatStageModel
 import com.adaptivehandyapps.ahascenex.model.StageDatabase
-import com.bumptech.glide.Glide
-import com.bumptech.glide.request.RequestOptions
 
 /**
  * A simple [Fragment] subclass as the second destination in the navigation.
@@ -33,16 +32,8 @@ import com.bumptech.glide.request.RequestOptions
 class CraftFragment : Fragment() {
     private val TAG = "CraftFragment"
 
-    // for Room & permissions
-    //private lateinit var application : Application
-
     private lateinit var craftViewModel: CraftViewModel
     private lateinit var binding: FragmentCraftBinding
-
-//    private lateinit var stageModel: StageModel
-//    private var stageModel: StageModel = StageModel()
-
-    //private var view : View
 
     override fun onCreateView(
             inflater: LayoutInflater, container: ViewGroup?,
@@ -57,7 +48,6 @@ class CraftFragment : Fragment() {
 
         // Room: application & database for viewmodel instantiation
         val application = requireNotNull(this.activity).application
-        //application = requireNotNull(this.activity).application     // application used for permissions
 
         val dataSource = StageDatabase.getInstance(application).stageDatabaseDao
 
@@ -72,20 +62,23 @@ class CraftFragment : Fragment() {
         val stageModel = args.stageModel
         // load view model with stage model
         craftViewModel.loadStageModel(stageModel)
-
-//        stageModel.id = args.stageModelId
-//        stageModel.label = args.stageModelLabel
-//        stageModel.type = args.stageModelType
-//        stageModel.sceneSrcUrl = args.stageModelSceneSrcUrl
+        // SafeArgs iteration where stage model data passed element by element
+        //stageModel.id = args.stageModelId
+        //stageModel.label = args.stageModelLabel
+        //stageModel.type = args.stageModelType
+        //stageModel.sceneSrcUrl = args.stageModelSceneSrcUrl
 
         //Toast.makeText(context, "testInt: ${args.testInt}, testString: ${args.testString}", Toast.LENGTH_LONG).show()
-        Toast.makeText(context, "testInt: ${args.testInt}, testString: ${args.testString}", Toast.LENGTH_LONG).show()
-        Log.d(TAG, "stageModel id# " + stageModel.nickname + " = " + stageModel.label + ", type " + stageModel.type + ", uri " + stageModel.sceneSrcUrl)
+        //Toast.makeText(context, "testInt: ${args.testInt}, testString: ${args.testString}", Toast.LENGTH_LONG).show()
+        Toast.makeText(context, "stageModel id#  ${stageModel.nickname} = ${stageModel.label}", Toast.LENGTH_LONG).show()
+        //Log.d(TAG, "stageModel id# " + stageModel.nickname + " = " + stageModel.label + ", type " + stageModel.type + ", uri " + stageModel.sceneSrcUrl)
+        Log.d(TAG, "onCreateView SafeArgs-> " + formatStageModel(stageModel))
 
         return binding.root
 
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         // button_save_stage updates DB then navigates back to stage fragment
@@ -108,36 +101,93 @@ class CraftFragment : Fragment() {
             // navigate back to stage frag
             findNavController().navigate(R.id.action_CraftFragment_to_StageFragment)
         }
+        // imageview_scene touch interactions
+        view.findViewById<ImageView>(R.id.imageview_scene).setOnTouchListener {
+                motionView: View, motionEvent: MotionEvent ->
+            craftViewModel.onTouch(motionView, motionEvent)
+
+            true    // pass touch on
+        }
 
         // show scene
         craftViewModel.showScene(view)
-//        val imgView = view.findViewById<ImageView>(R.id.imageview_scene)
-//        val imgUrl = craftViewModel.stageModel.value!!.sceneSrcUrl
-//        val imgUri = imgUrl!!.toUri()
-
-//        craftViewModel.showScene(view, imgView, imgUri)
-//        // show label
-//        val editTextSceneLabel = view.findViewById<EditText>(R.id.edittext_scene_label)
-//        editTextSceneLabel.setText(craftViewModel.stageModel.value!!.label)
     }
 //    ///////////////////////////////////////////////////////////////////////////
-//    fun showScene(view: View, imgView: ImageView, imgUri: Uri) {
-//        // show label
-//        val editTextSceneLabel = view.findViewById<EditText>(R.id.edittext_scene_label)
-//        editTextSceneLabel.setText(craftViewModel.stageModel.value!!.label)
-//        try {
-//            Glide.with(imgView.context)
-//                .load(imgUri)
-//                .apply(
-//                    RequestOptions()
-//                        .placeholder(R.drawable.loading_animation)
-//                        .error(R.drawable.ic_broken_image)
-//                )
-//                .into(imgView)
+//    private fun onTouch(motionView: View, motionEvent: MotionEvent) {
+//        val MIN_SCALE_FACTOR = 1.0F
+//        val MAX_SCALE_FACTOR = 16.0F
+//        val DELTA_SCALE_FACTOR = 0.2F
+//
+//        var x0: Float = 0.0F
+//        var y0: Float = 0.0F
+//        var x1: Float = 0.0F
+//        var y1: Float = 0.0F
+//
+//        var scale: Float = MIN_SCALE_FACTOR
+//        var prevScaleX: Float = MIN_SCALE_FACTOR
+//        var deltaX: Float = MIN_SCALE_FACTOR
+//        var prevDeltaX: Float = MIN_SCALE_FACTOR
+//
+//        Log.d(TAG, "MotionEvent" + motionEvent.toString())
+//        val actionMasked = motionEvent.actionMasked
+//        Log.d(TAG, "MotionEvent action(raw) = $motionEvent.actionMasked")
+//        val actionString = getActionMaskedString(actionMasked)
+//        Log.d(TAG, "MotionEvent action($actionMasked)= $actionString")
+//
+//        val pointerCount = motionEvent.pointerCount
+//        val pointerId = motionEvent.getPointerId(0)
+//        Log.d(TAG, "MotionEvent pointerCount = ${pointerCount}, pointerId = $pointerId")
+//        // multi-touch
+//        if (pointerCount == 2) {
+//            if (actionMasked == MotionEvent.ACTION_POINTER_DOWN  ||
+//                actionMasked == MotionEvent.ACTION_MOVE  ||
+//                actionMasked == MotionEvent.ACTION_POINTER_UP) {
+//                x0 = motionEvent.getX(0)
+//                y0 = motionEvent.getY(0)
+//                x1 = motionEvent.getX(1)
+//                y1 = motionEvent.getY(1)
+//                Log.d(TAG, "MotionEvent $actionString at x0, y0 = $x0, $y0 to x1, y1 = $x1, $y1")
+//
+//                prevScaleX = motionView.scaleX
+////                prevDeltaX = deltaX
+////                deltaX = (x0 / x1)
+//                deltaX = if (x1 > x0) {
+//                    DELTA_SCALE_FACTOR
+//                } else {
+//                    -DELTA_SCALE_FACTOR
+//                }
+//                scale = deltaX + motionView.scaleX
+////                if (deltaX > prevDeltaX) {
+////                    scale = deltaX + motionView.scaleX
+////                }
+////                else {
+////                    scale = deltaX - motionView.scaleX
+////                }
+//                Log.d(TAG, "MotionEvent scale = $scale, prevScale = $prevScaleX, deltaX = $deltaX")
+//                // limit scaling to prevent idiocy
+//                if (scale < MIN_SCALE_FACTOR) {
+//                    scale = MIN_SCALE_FACTOR
+//                }
+//                else if (scale > MAX_SCALE_FACTOR) {
+//                    scale = MAX_SCALE_FACTOR
+//                }
+//                motionView.scaleX = scale
+//                motionView.scaleY = scale
+//            }
 //        }
-//        catch (ex : Exception) {
-//            Log.e("BindingAdapter", "scenex Glide exception! " + ex.localizedMessage)
+//    }
+//    private fun getActionMaskedString(actionMasked: Int): String {
+//        var actionString: String
+//        when (actionMasked)
+//        {
+//            MotionEvent.ACTION_DOWN -> actionString = "DOWN"
+//            MotionEvent.ACTION_UP -> actionString = "UP"
+//            MotionEvent.ACTION_POINTER_DOWN -> actionString = "PNTR DOWN"
+//            MotionEvent.ACTION_POINTER_UP -> actionString = "PNTR UP"
+//            MotionEvent.ACTION_MOVE -> actionString = "MOVE"
+//            else -> actionString = ""
 //        }
+//        return actionString
 //    }
     ///////////////////////////////////////////////////////////////////////////
     fun saveStageModel() {
