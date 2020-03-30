@@ -23,7 +23,8 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
 import kotlinx.coroutines.*
 import kotlin.math.abs
-import kotlin.math.max
+import kotlin.math.pow
+import kotlin.math.sqrt
 
 ///////////////////////////////////////////////////////////////////////////
 //class CraftViewModel : ViewModel()
@@ -48,23 +49,28 @@ class CraftViewModel (val database: StageDatabaseDao,
     val DELTA_SCALE_FACTOR = 0.2F
     val DELTA_DIFF_THRESHOLD = 4.0F
 
-    var x0Start: Float = 0.0F
-    var y0Start: Float = 0.0F
-    var x1Start: Float = 0.0F
-    var y1Start: Float = 0.0F
-    var deltaStart: Float = 0.0F
+//    var x0Start: Float = 0.0F
+//    var y0Start: Float = 0.0F
+//    var x1Start: Float = 0.0F
+//    var y1Start: Float = 0.0F
+    var distPrev: Float = 0.0F
+    var distCurr: Float = 0.0F
+    var distStart: Float = 0.0F
 
     var x0Prev: Float = 0.0F
     var y0Prev: Float = 0.0F
     var x1Prev: Float = 0.0F
     var y1Prev: Float = 0.0F
-    var x0Next: Float = 0.0F
-    var y0Next: Float = 0.0F
-    var x1Next: Float = 0.0F
-    var y1Next: Float = 0.0F
+    var x0Curr: Float = 0.0F
+    var y0Curr: Float = 0.0F
+    var x1Curr: Float = 0.0F
+    var y1Curr: Float = 0.0F
 
-    var scale: Float = MIN_SCALE_FACTOR
-    var prevScale: Float = MIN_SCALE_FACTOR
+    var deltaCurr: Float = 0.0F
+    var deltaPrev: Float = 0.0F
+
+    var scaleCurr: Float = MIN_SCALE_FACTOR
+    var scalePrev: Float = MIN_SCALE_FACTOR
     var deltaScaleFactor: Float = DELTA_SCALE_FACTOR
 
     ///////////////////////////////////////////////////////////////////////////
@@ -167,65 +173,81 @@ class CraftViewModel (val database: StageDatabaseDao,
         // multi-touch
         if (pointerCount == 2) {
             if (actionMasked == MotionEvent.ACTION_POINTER_DOWN) {
-                // set starting x,y
-                x0Start = motionEvent.getX(0)
-                y0Start = motionEvent.getY(0)
-                x1Start = motionEvent.getX(1)
-                y1Start = motionEvent.getY(1)
-                deltaStart = abs(x1Start - x0Start)
-
-                x0Next = motionEvent.getX(0)
-                y0Next = motionEvent.getY(0)
-                x1Next = motionEvent.getX(1)
-                y1Next = motionEvent.getY(1)
-                Log.d(TAG, "MotionEvent $actionString delta ($deltaStart) at x0, y0 = $x0Next, $y0Next to x1, y1 = $x1Next, $y1Next")
+                Log.d(TAG, "MotionEvent $actionString...")
+//                // set starting x,y
+//                x0Start = motionEvent.getX(0)
+//                y0Start = motionEvent.getY(0)
+//                x1Start = motionEvent.getX(1)
+//                y1Start = motionEvent.getY(1)
+                // determine distance between touch points
+//                deltaStart = abs(x1Start - x0Start)
+                // set to save next on MOVE
+                x0Curr = motionEvent.getX(0)
+                y0Curr = motionEvent.getY(0)
+                x1Curr = motionEvent.getX(1)
+                y1Curr = motionEvent.getY(1)
+//                distCurr = sqrt((x1Next - x0Next).pow(2) + (y1Next - y0Next).pow(2))
+                distCurr = getDistance(x0Curr, y0Curr, x1Curr, y1Curr)
+                distStart = distCurr
             }
             else if (actionMasked == MotionEvent.ACTION_MOVE  ||
                 actionMasked == MotionEvent.ACTION_POINTER_UP) {
+                Log.d(TAG, "MotionEvent $actionString...")
             // TODO: smooth pinch/zoom by handling MOVE
 //            else if (actionMasked == MotionEvent.ACTION_POINTER_UP) {
-                // save previous x,y
-                x0Prev = x0Next
-                y0Prev = y0Next
-                x1Prev = x1Next
-                y1Prev = y1Next
+                // save previous x,y,dist
+                x0Prev = x0Curr
+                y0Prev = y0Curr
+                x1Prev = x1Curr
+                y1Prev = y1Curr
+                distPrev = distCurr
                 // set next x,y
-                x0Next = motionEvent.getX(0)
-                y0Next = motionEvent.getY(0)
-                x1Next = motionEvent.getX(1)
-                y1Next = motionEvent.getY(1)
+                x0Curr = motionEvent.getX(0)
+                y0Curr = motionEvent.getY(0)
+                x1Curr = motionEvent.getX(1)
+                y1Curr = motionEvent.getY(1)
+                distCurr = getDistance(x0Curr, y0Curr, x1Curr, y1Curr)
 //                val deltaPrev = abs(x1Prev - x0Prev)
 //                val deltaNext = abs(x1Next - x0Next)
 //                val deltaNext = max(abs(x1Next - x0Start), abs(x0Next - x1Start))
-                val deltaNext = abs(x1Next - x0Start)
+                deltaPrev = deltaCurr
+                deltaCurr = distCurr - distStart
+//                deltaCurr = distCurr - distPrev
+//                val deltaCurr = abs(distCurr - distPrev)
+//                Log.d(TAG, "MotionEvent $actionString delta ($deltaNext) at x0, y0 = $x0Next, $y0Next to x1, y1 = $x1Next, $y1Next")
 
-                Log.d(TAG, "MotionEvent $actionString delta ($deltaNext) at x0, y0 = $x0Next, $y0Next to x1, y1 = $x1Next, $y1Next")
                 // if delta above thresold, scale view (attempt to smooth scaling)
-                if (deltaNext > DELTA_DIFF_THRESHOLD) {
+//                if (abs(distCurr - distPrev) > DELTA_DIFF_THRESHOLD) {
+                if (abs(distCurr - distPrev) > DELTA_DIFF_THRESHOLD) {
                     // ugh!
-                    deltaScaleFactor = if (deltaNext > deltaStart) {
+                    deltaScaleFactor = if (deltaCurr > 0) {
                         DELTA_SCALE_FACTOR
                     } else {
                         -DELTA_SCALE_FACTOR
                     }
-                    prevScale = motionView.scaleX
-                    scale = deltaScaleFactor + motionView.scaleX
+                    scalePrev = motionView.scaleX
+                    scaleCurr = deltaScaleFactor + motionView.scaleX
                     Log.d(
                         TAG,
-                        "MotionEvent scale = $scale, prevScale = $prevScale, deltaX = $deltaScaleFactor"
+                        "MotionEvent scale = $scaleCurr, prevScale = $scalePrev, deltaX = $deltaScaleFactor"
                     )
 
                     // limit scaling to prevent idiocy
-                    if (scale < MIN_SCALE_FACTOR) {
-                        scale = MIN_SCALE_FACTOR
-                    } else if (scale > MAX_SCALE_FACTOR) {
-                        scale = MAX_SCALE_FACTOR
+                    if (scaleCurr < MIN_SCALE_FACTOR) {
+                        scaleCurr = MIN_SCALE_FACTOR
+                    } else if (scaleCurr > MAX_SCALE_FACTOR) {
+                        scaleCurr = MAX_SCALE_FACTOR
                     }
-                    motionView.scaleX = scale
-                    motionView.scaleY = scale
+                    motionView.scaleX = scaleCurr
+                    motionView.scaleY = scaleCurr
                 }
             }
         }
+    }
+    private fun getDistance(x0: Float, y0: Float, x1: Float, y1: Float): Float {
+        val dist = sqrt((x1Curr - x0Curr).pow(2) + (y1Curr - y0Curr).pow(2))
+        Log.d(TAG, "MotionEvent dist ($dist) at x0, y0 = $x0, $y0 to x1, y1 = $x1, $y1")
+        return dist
     }
     private fun getActionMaskedString(actionMasked: Int): String {
         var actionString: String
