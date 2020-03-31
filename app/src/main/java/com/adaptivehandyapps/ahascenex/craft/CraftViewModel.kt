@@ -73,9 +73,16 @@ class CraftViewModel (val database: StageDatabaseDao,
     var scalePrev: Float = MIN_SCALE_FACTOR
     var deltaScaleFactor: Float = DELTA_SCALE_FACTOR
 
+    var centerX: Float = 0.0F
+    var centerY: Float = 0.0F
+    var viewportWidth: Float = 0.0F
+    lateinit var viewportRectf: Rect
+    var viewportLeftEdge = centerX - (viewportWidth/2)
+    var viewportRightEdge = centerX + (viewportWidth/2)
+
+
     ///////////////////////////////////////////////////////////////////////////
     init {
-
     }
     ///////////////////////////////////////////////////////////////////////////
     // frag initialization sets stage model after unbundling args
@@ -167,21 +174,23 @@ class CraftViewModel (val database: StageDatabaseDao,
         val actionString = getActionMaskedString(actionMasked)
         Log.d(TAG, "MotionEvent action($actionMasked)= $actionString")
 
-        var left = motionView.left
-        var top = motionView.top
-        var right = motionView.right
-        var bottom = motionView.bottom
+        val left = motionView.left
+        val top = motionView.top
+        val right = motionView.right
+        val bottom = motionView.bottom
         Log.d(TAG, "MotionEvent left $left, top $top, right $right, bottom $bottom")
 
-        var leftX = motionView.x
-        var topY = motionView.y
-        var width = motionView.width
-        var height = motionView.height
+        val leftX = motionView.x
+        val topY = motionView.y
+        val width = motionView.width
+        val height = motionView.height
         Log.d(TAG, "MotionEvent leftX $leftX, topY $topY, width $width, height $height")
 
-        var rectf = Rect()
-        motionView.getLocalVisibleRect(rectf)
-        Log.d(TAG, "MotionEvent rect left ${rectf.left}, top ${rectf.top}, right ${rectf.right}, bottom ${rectf.bottom},width ${rectf.width()}, height ${rectf.height()}")
+        // get center X,Y & current visible rect
+        centerX = (width/2).toFloat()
+        centerY = (height/2).toFloat()
+        Log.d(TAG, "MotionEvent center X,Y $centerX, $centerY")
+        viewportRectf = getVRect(motionView)
 
         val pointerCount = motionEvent.pointerCount
         val pointerId = motionEvent.getPointerId(0)
@@ -243,8 +252,15 @@ class CraftViewModel (val database: StageDatabaseDao,
                     // maintain aspect ratio
                     motionView.scaleX = scaleCurr
                     motionView.scaleY = scaleCurr
+                    // reset viewport dims & visible rect for updated scale
+                    viewportRectf = getVRect(motionView)
+                    viewportWidth = motionView.width * motionView.scaleX
+                    viewportLeftEdge = (centerX * motionView.scaleX) - (viewportWidth/2)
+                    viewportRightEdge = (centerX * motionView.scaleX) + (viewportWidth/2)
+                    Log.d(TAG,"MotionEvent post-scale viewportWidth $viewportWidth, " +
+                            "viewportLeftEdge $viewportLeftEdge, viewportRightEdge $viewportRightEdge")
+                    // if UP, mark multi-touch complete
                     if (actionMasked == MotionEvent.ACTION_POINTER_UP) {
-                        // complete multi-touch
                         multiTouchInProgress = false
                     }
                 }
@@ -272,55 +288,52 @@ class CraftViewModel (val database: StageDatabaseDao,
                 // determine delta between current/start touches
                 val distX = x0Curr - x0Prev
                 val distY = y0Curr - y0Prev
-                // adjust local visible rect
-                var rectf = Rect()
-                motionView.getLocalVisibleRect(rectf)
-                Log.d(TAG, "MotionEvent visible left ${rectf.left}, top ${rectf.top}, right ${rectf.right}, bottom ${rectf.bottom},width ${rectf.width()}, height ${rectf.height()}")
-//                var leftLocal = motionView.left - distX
-//                var topLocal = motionView.top
-//                var rightLocal = motionView.right - distX
-//                var bottomLocal = motionView.bottom
-//                Log.d(TAG, "MotionEvent rect left ${rectf.left}, top ${rectf.top}, right ${rectf.right}, bottom ${rectf.bottom},width ${rectf.width()}, height ${rectf.height()}")
-                Log.d(TAG, "MotionEvent pre-pan pivot X ${motionView.pivotX}, Y ${motionView.pivotY}")
-                val pivotX = motionView.pivotX - distX
-                val virtualWidth = width * motionView.scaleX
-                val leftTest = pivotX - (virtualWidth/2)
-                val rightTest = pivotX + (virtualWidth/2)
-                Log.d(TAG, "MotionEvent next pivot X ${pivotX}, vWidth $virtualWidth, leftTest $leftTest, rightTest $rightTest")
-//                if (leftTest > motionView.left && rightTest < motionView.right) {
-//                if (leftTest > 0) {
-//                    motionView.pivotX = motionView.pivotX - distX
-//                }
-                motionView.pivotX = motionView.pivotX - distX
-                motionView.pivotY = motionView.pivotY - distY
-                motionView.getLocalVisibleRect(rectf)
-                Log.d(TAG, "MotionEvent pan pivot X ${motionView.pivotX}, Y ${motionView.pivotY}")
-
-                if (actionMasked == MotionEvent.ACTION_UP) {
-                   // complete single touch
-                    singleTouchInProgress = false
+                Log.d(TAG, "MotionEvent dist x,y $distX, $distY, curr x,y $x0Curr, $y0Curr, prev x,y $x0Prev, $y0Prev")
+                // if distance non-zero
+                if (distX > 0 || distX < 0 || distY > 0 || distY < 0) {
+                    viewportRectf = getVRect(motionView)
+                    var leftEdgeTest: Float = viewportRectf.left - distX
+                    var rightEdgeTest: Float = viewportRectf.right - distX
+                    var testPivotX: Float = motionView.pivotX - distX
+                    Log.d(TAG,"MotionEvent test leftTest $leftEdgeTest >= leftEdge $viewportLeftEdge, " +
+                            "rightTest $rightEdgeTest <= rightEdge $viewportRightEdge")
+                    Log.d(TAG,"MotionEvent pre-pan pivot X ${motionView.pivotX}, Y ${motionView.pivotY}, " +
+                            "textPivotX $testPivotX")
+                    // motionView.pivotX = motionView.pivotX - distX
+                    if (leftEdgeTest >= viewportLeftEdge && rightEdgeTest <= viewportRightEdge) {
+                        Log.d(TAG, "MotionEvent edge test PASS...")
+                        motionView.pivotX = testPivotX
+                    } else {
+                        Log.d(TAG, "MotionEvent edge test FAIL...")
+                    }
+                    motionView.pivotY = motionView.pivotY - distY
+                    Log.d(
+                        TAG,
+                        "MotionEvent pan pivot X ${motionView.pivotX}, Y ${motionView.pivotY}"
+                    )
+                    // examine new visible rect
+                    getVRect(motionView)
+                    // if UP, complete single touch
+                    if (actionMasked == MotionEvent.ACTION_UP) {
+                        singleTouchInProgress = false
+                    }
                 }
             }
         }
 
         //Log.d(TAG, "cameraDistance ${motionView.cameraDistance}, translationX ${motionView.translationX}, translationY ${motionView.translationY}")
         //motionView.setLeftTopRightBottom(left, top, right, bottom)
-//        var left = motionView.left
-//        var top = motionView.top
-//        var right = motionView.right
-//        var bottom = motionView.bottom
-//        Log.d(TAG, "MotionEvent left $left, top $top, right $right, bottom $bottom")
-//
-//        var leftX = motionView.x
-//        var topY = motionView.y
-//        var width = motionView.width
-//        var height = motionView.height
-//        Log.d(TAG, "MotionEvent leftX $leftX, topY $topY, width $width, height $height")
-//
-//        var rectf = Rect()
-//        motionView.getLocalVisibleRect(rectf)
-//        Log.d(TAG, "MotionEvent rect left ${rectf.left}, top ${rectf.top}, right ${rectf.right}, bottom ${rectf.bottom},width ${rectf.width()}, height ${rectf.height()}")
 
+    }
+    private fun getVRect(motionView: View): Rect {
+        // get local visible rect
+        val rectf = Rect()
+        motionView.getLocalVisibleRect(rectf)
+        Log.d(TAG, "MotionEvent visible left ${rectf.left}, top ${rectf.top}, " +
+                "right ${rectf.right}, bottom ${rectf.bottom}, " +
+                "width ${rectf.width()}, height ${rectf.height()}")
+        Log.d(TAG, "MotionEvent pivot X ${motionView.pivotX}, Y ${motionView.pivotY}")
+        return rectf
     }
     private fun getDistance(x0: Float, y0: Float, x1: Float, y1: Float): Float {
         val dist = sqrt((x1Curr - x0Curr).pow(2) + (y1Curr - y0Curr).pow(2))
