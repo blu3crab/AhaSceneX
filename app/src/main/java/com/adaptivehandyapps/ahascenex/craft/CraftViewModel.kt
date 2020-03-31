@@ -6,6 +6,7 @@
 package com.adaptivehandyapps.ahascenex.craft
 
 import android.app.Application
+import android.graphics.Rect
 import android.util.Log
 import android.view.MotionEvent
 import android.view.View
@@ -49,10 +50,9 @@ class CraftViewModel (val database: StageDatabaseDao,
     val DELTA_SCALE_FACTOR = 0.2F
     val DELTA_DIFF_THRESHOLD = 4.0F
 
-//    var x0Start: Float = 0.0F
-//    var y0Start: Float = 0.0F
-//    var x1Start: Float = 0.0F
-//    var y1Start: Float = 0.0F
+    var multiTouchInProgress = false
+    var singleTouchInProgress = false
+
     var distPrev: Float = 0.0F
     var distCurr: Float = 0.0F
     var distStart: Float = 0.0F
@@ -167,59 +167,61 @@ class CraftViewModel (val database: StageDatabaseDao,
         val actionString = getActionMaskedString(actionMasked)
         Log.d(TAG, "MotionEvent action($actionMasked)= $actionString")
 
+        var left = motionView.left
+        var top = motionView.top
+        var right = motionView.right
+        var bottom = motionView.bottom
+        Log.d(TAG, "MotionEvent left $left, top $top, right $right, bottom $bottom")
+
+        var leftX = motionView.x
+        var topY = motionView.y
+        var width = motionView.width
+        var height = motionView.height
+        Log.d(TAG, "MotionEvent leftX $leftX, topY $topY, width $width, height $height")
+
+        var rectf = Rect()
+        motionView.getLocalVisibleRect(rectf)
+        Log.d(TAG, "MotionEvent rect left ${rectf.left}, top ${rectf.top}, right ${rectf.right}, bottom ${rectf.bottom},width ${rectf.width()}, height ${rectf.height()}")
+
         val pointerCount = motionEvent.pointerCount
         val pointerId = motionEvent.getPointerId(0)
         Log.d(TAG, "MotionEvent pointerCount = ${pointerCount}, pointerId = $pointerId")
         // multi-touch
         if (pointerCount == 2) {
             if (actionMasked == MotionEvent.ACTION_POINTER_DOWN) {
-                Log.d(TAG, "MotionEvent $actionString...")
-//                // set starting x,y
-//                x0Start = motionEvent.getX(0)
-//                y0Start = motionEvent.getY(0)
-//                x1Start = motionEvent.getX(1)
-//                y1Start = motionEvent.getY(1)
-                // determine distance between touch points
-//                deltaStart = abs(x1Start - x0Start)
+                Log.d(TAG, "MotionEvent multi-touch $actionString...")
+                multiTouchInProgress = true
+                singleTouchInProgress = false
                 // set to save next on MOVE
                 x0Curr = motionEvent.getX(0)
                 y0Curr = motionEvent.getY(0)
                 x1Curr = motionEvent.getX(1)
                 y1Curr = motionEvent.getY(1)
-//                distCurr = sqrt((x1Next - x0Next).pow(2) + (y1Next - y0Next).pow(2))
+                // determine distance between touch points
                 distCurr = getDistance(x0Curr, y0Curr, x1Curr, y1Curr)
                 distStart = distCurr
             }
-            else if (actionMasked == MotionEvent.ACTION_MOVE  ||
-                actionMasked == MotionEvent.ACTION_POINTER_UP) {
-                Log.d(TAG, "MotionEvent $actionString...")
-            // TODO: smooth pinch/zoom by handling MOVE
-//            else if (actionMasked == MotionEvent.ACTION_POINTER_UP) {
+            else if (multiTouchInProgress && (actionMasked == MotionEvent.ACTION_MOVE  ||
+                actionMasked == MotionEvent.ACTION_POINTER_UP)) {
+                Log.d(TAG, "MotionEvent multi-touch $actionString...")
                 // save previous x,y,dist
                 x0Prev = x0Curr
                 y0Prev = y0Curr
                 x1Prev = x1Curr
                 y1Prev = y1Curr
                 distPrev = distCurr
-                // set next x,y
+                // set current x,y
                 x0Curr = motionEvent.getX(0)
                 y0Curr = motionEvent.getY(0)
                 x1Curr = motionEvent.getX(1)
                 y1Curr = motionEvent.getY(1)
+                // determine distance & delta between current/start touches
                 distCurr = getDistance(x0Curr, y0Curr, x1Curr, y1Curr)
-//                val deltaPrev = abs(x1Prev - x0Prev)
-//                val deltaNext = abs(x1Next - x0Next)
-//                val deltaNext = max(abs(x1Next - x0Start), abs(x0Next - x1Start))
                 deltaPrev = deltaCurr
                 deltaCurr = distCurr - distStart
-//                deltaCurr = distCurr - distPrev
-//                val deltaCurr = abs(distCurr - distPrev)
-//                Log.d(TAG, "MotionEvent $actionString delta ($deltaNext) at x0, y0 = $x0Next, $y0Next to x1, y1 = $x1Next, $y1Next")
-
-                // if delta above thresold, scale view (attempt to smooth scaling)
-//                if (abs(distCurr - distPrev) > DELTA_DIFF_THRESHOLD) {
+                // if delta between current/previous above thresold, scale view (attempting to smooth scaling)
                 if (abs(distCurr - distPrev) > DELTA_DIFF_THRESHOLD) {
-                    // ugh!
+                    // if current delta is positive, add to scale factor, else subtract from scale factor
                     deltaScaleFactor = if (deltaCurr > 0) {
                         DELTA_SCALE_FACTOR
                     } else {
@@ -232,17 +234,93 @@ class CraftViewModel (val database: StageDatabaseDao,
                         "MotionEvent scale = $scaleCurr, prevScale = $scalePrev, deltaX = $deltaScaleFactor"
                     )
 
-                    // limit scaling to prevent idiocy
+                    // limit scaling to prevent idiocy (zoom out to microscopic dot or zoom in to pixel)
                     if (scaleCurr < MIN_SCALE_FACTOR) {
                         scaleCurr = MIN_SCALE_FACTOR
                     } else if (scaleCurr > MAX_SCALE_FACTOR) {
                         scaleCurr = MAX_SCALE_FACTOR
                     }
+                    // maintain aspect ratio
                     motionView.scaleX = scaleCurr
                     motionView.scaleY = scaleCurr
+                    if (actionMasked == MotionEvent.ACTION_POINTER_UP) {
+                        // complete multi-touch
+                        multiTouchInProgress = false
+                    }
                 }
             }
         }
+        // single-touch
+        else if (pointerCount == 1) {
+            if (actionMasked == MotionEvent.ACTION_DOWN) {
+                singleTouchInProgress = true
+                multiTouchInProgress = false
+                Log.d(TAG, "MotionEvent single-touch $actionString...")
+                // set to save next on MOVE
+                x0Curr = motionEvent.getX(0)
+                y0Curr = motionEvent.getY(0)
+            }
+            else if (singleTouchInProgress && (actionMasked == MotionEvent.ACTION_MOVE  ||
+                actionMasked == MotionEvent.ACTION_UP)) {
+                Log.d(TAG, "MotionEvent single-touch $actionString...")
+                // save previous x,y,dist
+                x0Prev = x0Curr
+                y0Prev = y0Curr
+                // set current x,y
+                x0Curr = motionEvent.getX(0)
+                y0Curr = motionEvent.getY(0)
+                // determine delta between current/start touches
+                val distX = x0Curr - x0Prev
+                val distY = y0Curr - y0Prev
+                // adjust local visible rect
+                var rectf = Rect()
+                motionView.getLocalVisibleRect(rectf)
+                Log.d(TAG, "MotionEvent visible left ${rectf.left}, top ${rectf.top}, right ${rectf.right}, bottom ${rectf.bottom},width ${rectf.width()}, height ${rectf.height()}")
+//                var leftLocal = motionView.left - distX
+//                var topLocal = motionView.top
+//                var rightLocal = motionView.right - distX
+//                var bottomLocal = motionView.bottom
+//                Log.d(TAG, "MotionEvent rect left ${rectf.left}, top ${rectf.top}, right ${rectf.right}, bottom ${rectf.bottom},width ${rectf.width()}, height ${rectf.height()}")
+                Log.d(TAG, "MotionEvent pre-pan pivot X ${motionView.pivotX}, Y ${motionView.pivotY}")
+                val pivotX = motionView.pivotX - distX
+                val virtualWidth = width * motionView.scaleX
+                val leftTest = pivotX - (virtualWidth/2)
+                val rightTest = pivotX + (virtualWidth/2)
+                Log.d(TAG, "MotionEvent next pivot X ${pivotX}, vWidth $virtualWidth, leftTest $leftTest, rightTest $rightTest")
+//                if (leftTest > motionView.left && rightTest < motionView.right) {
+//                if (leftTest > 0) {
+//                    motionView.pivotX = motionView.pivotX - distX
+//                }
+                motionView.pivotX = motionView.pivotX - distX
+                motionView.pivotY = motionView.pivotY - distY
+                motionView.getLocalVisibleRect(rectf)
+                Log.d(TAG, "MotionEvent pan pivot X ${motionView.pivotX}, Y ${motionView.pivotY}")
+
+                if (actionMasked == MotionEvent.ACTION_UP) {
+                   // complete single touch
+                    singleTouchInProgress = false
+                }
+            }
+        }
+
+        //Log.d(TAG, "cameraDistance ${motionView.cameraDistance}, translationX ${motionView.translationX}, translationY ${motionView.translationY}")
+        //motionView.setLeftTopRightBottom(left, top, right, bottom)
+//        var left = motionView.left
+//        var top = motionView.top
+//        var right = motionView.right
+//        var bottom = motionView.bottom
+//        Log.d(TAG, "MotionEvent left $left, top $top, right $right, bottom $bottom")
+//
+//        var leftX = motionView.x
+//        var topY = motionView.y
+//        var width = motionView.width
+//        var height = motionView.height
+//        Log.d(TAG, "MotionEvent leftX $leftX, topY $topY, width $width, height $height")
+//
+//        var rectf = Rect()
+//        motionView.getLocalVisibleRect(rectf)
+//        Log.d(TAG, "MotionEvent rect left ${rectf.left}, top ${rectf.top}, right ${rectf.right}, bottom ${rectf.bottom},width ${rectf.width()}, height ${rectf.height()}")
+
     }
     private fun getDistance(x0: Float, y0: Float, x1: Float, y1: Float): Float {
         val dist = sqrt((x1Curr - x0Curr).pow(2) + (y1Curr - y0Curr).pow(2))
