@@ -177,21 +177,17 @@ class CraftViewModel (val database: StageDatabaseDao,
         val actionString = getActionMaskedString(actionMasked)
         Log.d(TAG, "MotionEvent action($actionMasked)= $actionString")
 
-        val left = motionView.left
-        val top = motionView.top
-        val right = motionView.right
-        val bottom = motionView.bottom
-        Log.d(TAG, "MotionEvent left $left, top $top, right $right, bottom $bottom")
-
-        val leftX = motionView.x
-        val topY = motionView.y
-        val width = motionView.width
-        val height = motionView.height
-        Log.d(TAG, "MotionEvent leftX $leftX, topY $topY, width $width, height $height")
+        // log view dimensions
+        //        val left = motionView.left
+        //        val top = motionView.top
+        //        val right = motionView.right
+        //        val bottom = motionView.bottom
+        //        Log.d(TAG, "MotionEvent left $left, top $top, right $right, bottom $bottom")
+        Log.d(TAG, "MotionEvent leftX ${motionView.x}, topY ${motionView.y}, width ${motionView.width}, height ${motionView.height}")
 
         // get center X,Y & current visible rect
-        centerX = (width/2).toFloat()
-        centerY = (height/2).toFloat()
+        centerX = (motionView.width/2).toFloat()
+        centerY = (motionView.height/2).toFloat()
         Log.d(TAG, "MotionEvent center X,Y $centerX, $centerY")
         viewportRectf = getVRect(motionView)
 
