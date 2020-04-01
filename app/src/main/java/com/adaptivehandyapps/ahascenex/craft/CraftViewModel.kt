@@ -76,9 +76,12 @@ class CraftViewModel (val database: StageDatabaseDao,
     var centerX: Float = 0.0F
     var centerY: Float = 0.0F
     var viewportWidth: Float = 0.0F
+    var viewportHeight: Float = 0.0F
     lateinit var viewportRectf: Rect
     var viewportLeftEdge = centerX - (viewportWidth/2)
     var viewportRightEdge = centerX + (viewportWidth/2)
+    var viewportTopEdge = centerY - (viewportHeight/2)
+    var viewportBottomEdge = centerY + (viewportHeight/2)
 
 
     ///////////////////////////////////////////////////////////////////////////
@@ -259,6 +262,11 @@ class CraftViewModel (val database: StageDatabaseDao,
                     viewportRightEdge = (centerX * motionView.scaleX) + (viewportWidth/2)
                     Log.d(TAG,"MotionEvent post-scale viewportWidth $viewportWidth, " +
                             "viewportLeftEdge $viewportLeftEdge, viewportRightEdge $viewportRightEdge")
+                    viewportHeight = motionView.height * motionView.scaleY
+                    viewportTopEdge = (centerY * motionView.scaleY) - (viewportHeight/2)
+                    viewportBottomEdge = (centerY * motionView.scaleY) + (viewportHeight/2)
+                    Log.d(TAG,"MotionEvent post-scale viewportHeight $viewportHeight, " +
+                            "viewportTopEdge $viewportTopEdge, viewportBottomEdge $viewportBottomEdge")
                     // if UP, mark multi-touch complete
                     if (actionMasked == MotionEvent.ACTION_POINTER_UP) {
                         multiTouchInProgress = false
@@ -292,21 +300,37 @@ class CraftViewModel (val database: StageDatabaseDao,
                 // if distance non-zero
                 if (distX > 0 || distX < 0 || distY > 0 || distY < 0) {
                     viewportRectf = getVRect(motionView)
+                    // left/right panning
                     var leftEdgeTest: Float = viewportRectf.left - distX
                     var rightEdgeTest: Float = viewportRectf.right - distX
                     var testPivotX: Float = motionView.pivotX - distX
-                    Log.d(TAG,"MotionEvent test leftTest $leftEdgeTest >= leftEdge $viewportLeftEdge, " +
+                    Log.d(TAG,"MotionEvent leftEdgeTest $leftEdgeTest >= leftEdge $viewportLeftEdge, " +
                             "rightTest $rightEdgeTest <= rightEdge $viewportRightEdge")
+                    // top/bottom panning
+                    var topEdgeTest: Float = viewportRectf.top - distY
+                    var bottomEdgeTest: Float = viewportRectf.bottom - distY
+                    var testPivotY: Float = motionView.pivotY - distY
+                    Log.d(TAG,"MotionEvent topEdgeTest $topEdgeTest >= topEdge $viewportTopEdge, " +
+                            "bottomEdgeTest $bottomEdgeTest <= bottomEdge $viewportBottomEdge")
+
+                    // test out of bounds panning
                     Log.d(TAG,"MotionEvent pre-pan pivot X ${motionView.pivotX}, Y ${motionView.pivotY}, " +
-                            "textPivotX $testPivotX")
+                            "textPivotX $testPivotX, textPivotY $testPivotY")
                     // motionView.pivotX = motionView.pivotX - distX
                     if (leftEdgeTest >= viewportLeftEdge && rightEdgeTest <= viewportRightEdge) {
-                        Log.d(TAG, "MotionEvent edge test PASS...")
+                        Log.d(TAG, "MotionEvent left/right edge test PASS...")
                         motionView.pivotX = testPivotX
                     } else {
-                        Log.d(TAG, "MotionEvent edge test FAIL...")
+                        Log.d(TAG, "MotionEvent left/right edge test FAIL...")
                     }
-                    motionView.pivotY = motionView.pivotY - distY
+                    //motionView.pivotY = motionView.pivotY - distY
+                    if (topEdgeTest >= viewportTopEdge && bottomEdgeTest <= viewportBottomEdge) {
+                        Log.d(TAG, "MotionEvent top/bottom edge test PASS...")
+                        motionView.pivotY = testPivotY
+                    } else {
+                        Log.d(TAG, "MotionEvent top/bottom edge test FAIL...")
+                    }
+
                     Log.d(
                         TAG,
                         "MotionEvent pan pivot X ${motionView.pivotX}, Y ${motionView.pivotY}"
