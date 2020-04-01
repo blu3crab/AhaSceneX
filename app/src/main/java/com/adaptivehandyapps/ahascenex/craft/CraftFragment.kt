@@ -104,7 +104,7 @@ class CraftFragment : Fragment() {
         // imageview_scene touch interactions
         view.findViewById<ImageView>(R.id.imageview_scene).setOnTouchListener {
                 motionView: View, motionEvent: MotionEvent ->
-            craftViewModel.onTouch(motionView, motionEvent)
+            craftViewModel.craftTouch.onTouch(motionView, motionEvent)
 
             true    // pass touch on
         }
