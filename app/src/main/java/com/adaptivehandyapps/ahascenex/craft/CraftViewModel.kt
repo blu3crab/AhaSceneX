@@ -6,10 +6,13 @@
 package com.adaptivehandyapps.ahascenex.craft
 
 import android.app.Application
+import android.content.Context
 import android.util.Log
 import android.view.View
+import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.ImageView
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.net.toUri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
@@ -80,6 +83,27 @@ class CraftViewModel (val database: StageDatabaseDao,
             Log.e("BindingAdapter", "scenex Glide exception! " + ex.localizedMessage)
         }
     }
+    fun showProp(view: View) {
+        // set image view
+        val imgView = view.findViewById<ImageView>(R.id.imageview_prop)
+        val imgUrl = stageModel.value!!.sceneSrcUrl
+        val imgUri = imgUrl!!.toUri()
+
+        try {
+            Glide.with(imgView.context)
+                .load(imgUri)
+                .apply(
+                    RequestOptions()
+                        .placeholder(R.drawable.loading_animation)
+                        .error(R.drawable.ic_broken_image)
+                )
+                .into(imgView)
+        }
+        catch (ex : Exception) {
+            Log.e("BindingAdapter", "scenex Glide exception! " + ex.localizedMessage)
+        }
+    }
+
     ///////////////////////////////////////////////////////////////////////////
     // update stage model label
     fun updateStageModelLabel(label: String) {

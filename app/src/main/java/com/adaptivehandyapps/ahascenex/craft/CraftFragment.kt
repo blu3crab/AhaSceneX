@@ -5,8 +5,9 @@
 //
 package com.adaptivehandyapps.ahascenex.craft
 
-//import androidx.core.content.PermissionChecker.checkSelfPermission
 import android.annotation.SuppressLint
+import android.graphics.BitmapFactory
+import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -17,6 +18,7 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.Toast
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
@@ -25,6 +27,7 @@ import com.adaptivehandyapps.ahascenex.R
 import com.adaptivehandyapps.ahascenex.databinding.FragmentCraftBinding
 import com.adaptivehandyapps.ahascenex.formatStageModel
 import com.adaptivehandyapps.ahascenex.model.StageDatabase
+
 
 /**
  * A simple [Fragment] subclass as the second destination in the navigation.
@@ -108,87 +111,42 @@ class CraftFragment : Fragment() {
 
             true    // pass touch on
         }
+//        // imageview_scene touch interactions
+//        view.setOnTouchListener {
+//                motionView: View, motionEvent: MotionEvent ->
+//            craftViewModel.craftTouch.onTouch(motionView, motionEvent)
+//
+//            true    // pass touch on
+//        }
 
         // show scene
         craftViewModel.showScene(view)
+//        craftViewModel.showProp(view)
+        addProp(view)
     }
-//    ///////////////////////////////////////////////////////////////////////////
-//    private fun onTouch(motionView: View, motionEvent: MotionEvent) {
-//        val MIN_SCALE_FACTOR = 1.0F
-//        val MAX_SCALE_FACTOR = 16.0F
-//        val DELTA_SCALE_FACTOR = 0.2F
-//
-//        var x0: Float = 0.0F
-//        var y0: Float = 0.0F
-//        var x1: Float = 0.0F
-//        var y1: Float = 0.0F
-//
-//        var scale: Float = MIN_SCALE_FACTOR
-//        var prevScaleX: Float = MIN_SCALE_FACTOR
-//        var deltaX: Float = MIN_SCALE_FACTOR
-//        var prevDeltaX: Float = MIN_SCALE_FACTOR
-//
-//        Log.d(TAG, "MotionEvent" + motionEvent.toString())
-//        val actionMasked = motionEvent.actionMasked
-//        Log.d(TAG, "MotionEvent action(raw) = $motionEvent.actionMasked")
-//        val actionString = getActionMaskedString(actionMasked)
-//        Log.d(TAG, "MotionEvent action($actionMasked)= $actionString")
-//
-//        val pointerCount = motionEvent.pointerCount
-//        val pointerId = motionEvent.getPointerId(0)
-//        Log.d(TAG, "MotionEvent pointerCount = ${pointerCount}, pointerId = $pointerId")
-//        // multi-touch
-//        if (pointerCount == 2) {
-//            if (actionMasked == MotionEvent.ACTION_POINTER_DOWN  ||
-//                actionMasked == MotionEvent.ACTION_MOVE  ||
-//                actionMasked == MotionEvent.ACTION_POINTER_UP) {
-//                x0 = motionEvent.getX(0)
-//                y0 = motionEvent.getY(0)
-//                x1 = motionEvent.getX(1)
-//                y1 = motionEvent.getY(1)
-//                Log.d(TAG, "MotionEvent $actionString at x0, y0 = $x0, $y0 to x1, y1 = $x1, $y1")
-//
-//                prevScaleX = motionView.scaleX
-////                prevDeltaX = deltaX
-////                deltaX = (x0 / x1)
-//                deltaX = if (x1 > x0) {
-//                    DELTA_SCALE_FACTOR
-//                } else {
-//                    -DELTA_SCALE_FACTOR
-//                }
-//                scale = deltaX + motionView.scaleX
-////                if (deltaX > prevDeltaX) {
-////                    scale = deltaX + motionView.scaleX
-////                }
-////                else {
-////                    scale = deltaX - motionView.scaleX
-////                }
-//                Log.d(TAG, "MotionEvent scale = $scale, prevScale = $prevScaleX, deltaX = $deltaX")
-//                // limit scaling to prevent idiocy
-//                if (scale < MIN_SCALE_FACTOR) {
-//                    scale = MIN_SCALE_FACTOR
-//                }
-//                else if (scale > MAX_SCALE_FACTOR) {
-//                    scale = MAX_SCALE_FACTOR
-//                }
-//                motionView.scaleX = scale
-//                motionView.scaleY = scale
-//            }
-//        }
-//    }
-//    private fun getActionMaskedString(actionMasked: Int): String {
-//        var actionString: String
-//        when (actionMasked)
-//        {
-//            MotionEvent.ACTION_DOWN -> actionString = "DOWN"
-//            MotionEvent.ACTION_UP -> actionString = "UP"
-//            MotionEvent.ACTION_POINTER_DOWN -> actionString = "PNTR DOWN"
-//            MotionEvent.ACTION_POINTER_UP -> actionString = "PNTR UP"
-//            MotionEvent.ACTION_MOVE -> actionString = "MOVE"
-//            else -> actionString = ""
-//        }
-//        return actionString
-//    }
+    fun addProp(view: View) {
+        val craftLayout = view?.findViewById<ConstraintLayout>(R.id.craft_layout)
+
+        val dimensions = BitmapFactory.Options()
+        dimensions.inJustDecodeBounds = true
+        val mBitmap = BitmapFactory.decodeResource(resources, R.drawable.leyland_t1_1024, dimensions)
+        val height = dimensions.outHeight
+        val width = dimensions.outWidth
+
+        var propView: ImageView
+
+        propView = ImageView(context)
+
+        craftLayout.addView(propView)
+
+        propView.layoutParams.height = height/4
+        propView.layoutParams.width = width/4
+        propView.x = 520F
+        propView.y = 620F
+        //propView.setBackgroundColor(Color.MAGENTA)
+        propView.setImageResource(R.drawable.leyland_t1_1024)
+
+    }
     ///////////////////////////////////////////////////////////////////////////
     fun saveStageModel() {
         // save label
