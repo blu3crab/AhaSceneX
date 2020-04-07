@@ -11,6 +11,7 @@ import android.graphics.Rect
 import android.util.Log
 import android.view.MotionEvent
 import android.view.View
+import com.adaptivehandyapps.ahascenex.R
 import kotlin.math.abs
 import kotlin.math.pow
 import kotlin.math.sqrt
@@ -70,9 +71,14 @@ class CraftTouch {
     // touch handler
     fun onTouch(motionView: View, motionEvent: MotionEvent) {
 
-        Log.d(TAG, "MotionEvent" + motionEvent.toString())
+        Log.d(TAG, "MotionEvent onTouch view id ${motionView.id}")
+        var sceneMotion = true
+        if (!motionView.id.equals(R.id.imageview_scene)) {
+            sceneMotion = false
+            Log.d(TAG, "MotionEvent onTouch for PROP view")
+        }
+        Log.d(TAG, "MotionEvent onTouch action(raw) $motionEvent")
         val actionMasked = motionEvent.actionMasked
-        Log.d(TAG, "MotionEvent action(raw) = $motionEvent.actionMasked")
         val actionString = getActionMaskedString(actionMasked)
         Log.d(TAG, "MotionEvent action($actionMasked)= $actionString")
 
@@ -142,10 +148,12 @@ class CraftTouch {
                     )
 
                     // limit scaling to prevent idiocy (zoom out to microscopic dot or zoom in to pixel)
-                    if (scaleCurr < MIN_SCALE_FACTOR) {
-                        scaleCurr = MIN_SCALE_FACTOR
-                    } else if (scaleCurr > MAX_SCALE_FACTOR) {
-                        scaleCurr = MAX_SCALE_FACTOR
+                    if (sceneMotion) {
+                        if (scaleCurr < MIN_SCALE_FACTOR) {
+                            scaleCurr = MIN_SCALE_FACTOR
+                        } else if (scaleCurr > MAX_SCALE_FACTOR) {
+                            scaleCurr = MAX_SCALE_FACTOR
+                        }
                     }
                     // maintain aspect ratio
                     motionView.scaleX = scaleCurr
@@ -194,44 +202,69 @@ class CraftTouch {
                 Log.d(TAG, "MotionEvent dist x,y $distX, $distY, curr x,y $x0Curr, $y0Curr, prev x,y $x0Prev, $y0Prev")
                 // if distance non-zero
                 if (distX > 0 || distX < 0 || distY > 0 || distY < 0) {
-                    viewportRectf = getVRect(motionView)
-                    // left/right panning
-                    var leftEdgeTest: Float = viewportRectf.left - distX
-                    var rightEdgeTest: Float = viewportRectf.right - distX
-                    var testPivotX: Float = motionView.pivotX - distX
-                    Log.d(TAG,"MotionEvent leftEdgeTest $leftEdgeTest >= leftEdge $viewportLeftEdge, " +
-                            "rightTest $rightEdgeTest <= rightEdge $viewportRightEdge")
-                    // top/bottom panning
-                    var topEdgeTest: Float = viewportRectf.top - distY
-                    var bottomEdgeTest: Float = viewportRectf.bottom - distY
-                    var testPivotY: Float = motionView.pivotY - distY
-                    Log.d(TAG,"MotionEvent topEdgeTest $topEdgeTest >= topEdge $viewportTopEdge, " +
-                            "bottomEdgeTest $bottomEdgeTest <= bottomEdge $viewportBottomEdge")
+                    if (sceneMotion) {
+                        viewportRectf = getVRect(motionView)
+                        // left/right panning
+                        var leftEdgeTest: Float = viewportRectf.left - distX
+                        var rightEdgeTest: Float = viewportRectf.right - distX
+                        var testPivotX: Float = motionView.pivotX - distX
+                        Log.d(
+                            TAG,
+                            "MotionEvent leftEdgeTest $leftEdgeTest >= leftEdge $viewportLeftEdge, " +
+                                    "rightTest $rightEdgeTest <= rightEdge $viewportRightEdge"
+                        )
+                        // top/bottom panning
+                        var topEdgeTest: Float = viewportRectf.top - distY
+                        var bottomEdgeTest: Float = viewportRectf.bottom - distY
+                        var testPivotY: Float = motionView.pivotY - distY
+                        Log.d(
+                            TAG,
+                            "MotionEvent topEdgeTest $topEdgeTest >= topEdge $viewportTopEdge, " +
+                                    "bottomEdgeTest $bottomEdgeTest <= bottomEdge $viewportBottomEdge"
+                        )
 
-                    // test out of bounds panning
-                    Log.d(TAG,"MotionEvent pre-pan pivot X ${motionView.pivotX}, Y ${motionView.pivotY}, " +
-                            "textPivotX $testPivotX, textPivotY $testPivotY")
-                    // motionView.pivotX = motionView.pivotX - distX
-                    if (leftEdgeTest >= viewportLeftEdge && rightEdgeTest <= viewportRightEdge) {
-                        Log.d(TAG, "MotionEvent left/right edge test PASS...")
-                        motionView.pivotX = testPivotX
-                    } else {
-                        Log.d(TAG, "MotionEvent left/right edge test FAIL...")
-                    }
-                    //motionView.pivotY = motionView.pivotY - distY
-                    if (topEdgeTest >= viewportTopEdge && bottomEdgeTest <= viewportBottomEdge) {
-                        Log.d(TAG, "MotionEvent top/bottom edge test PASS...")
-                        motionView.pivotY = testPivotY
-                    } else {
-                        Log.d(TAG, "MotionEvent top/bottom edge test FAIL...")
-                    }
+                        // test out of bounds panning
+                        Log.d(
+                            TAG,
+                            "MotionEvent pre-pan pivot X ${motionView.pivotX}, Y ${motionView.pivotY}, " +
+                                    "textPivotX $testPivotX, textPivotY $testPivotY"
+                        )
+                        // motionView.pivotX = motionView.pivotX - distX
+                        if (leftEdgeTest >= viewportLeftEdge && rightEdgeTest <= viewportRightEdge) {
+                            Log.d(TAG, "MotionEvent left/right edge test PASS...")
+                            motionView.pivotX = testPivotX
+                        } else {
+                            Log.d(TAG, "MotionEvent left/right edge test FAIL...")
+                        }
+                        //motionView.pivotY = motionView.pivotY - distY
+                        if (topEdgeTest >= viewportTopEdge && bottomEdgeTest <= viewportBottomEdge) {
+                            Log.d(TAG, "MotionEvent top/bottom edge test PASS...")
+                            motionView.pivotY = testPivotY
+                        } else {
+                            Log.d(TAG, "MotionEvent top/bottom edge test FAIL...")
+                        }
 
-                    Log.d(
-                        TAG,
-                        "MotionEvent pan pivot X ${motionView.pivotX}, Y ${motionView.pivotY}"
-                    )
-                    // examine new visible rect
-                    getVRect(motionView)
+                        Log.d(
+                            TAG,
+                            "MotionEvent pan scene pivot X ${motionView.pivotX}, Y ${motionView.pivotY}"
+                        )
+                        // examine new visible rect
+                        getVRect(motionView)
+                    }
+                    else {
+//                        motionView.x = distX
+//                        motionView.y = distY
+                        var deltaX = 0.0F
+                        if (distX < 0) deltaX = -DELTA_DIFF_THRESHOLD
+                        else if (distX > 0) deltaX = DELTA_DIFF_THRESHOLD
+                        var deltaY = 0.0F
+                        if (distY < 0) deltaY = -DELTA_DIFF_THRESHOLD
+                        else if (distY > 0) deltaY = DELTA_DIFF_THRESHOLD
+                        Log.d(TAG,"MotionEvent pre-pan prop X ${motionView.x}, Y ${motionView.y}, delta x,y $deltaX, $deltaY")
+                        motionView.x += deltaX
+                        motionView.y += deltaY
+                        Log.d(TAG,"MotionEvent pan prop X ${motionView.x}, Y ${motionView.y}")
+                    }
                     // if UP, complete single touch
                     if (actionMasked == MotionEvent.ACTION_UP) {
                         singleTouchInProgress = false

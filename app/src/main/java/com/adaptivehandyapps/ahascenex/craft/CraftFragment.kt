@@ -139,13 +139,19 @@ class CraftFragment : Fragment() {
 
         craftLayout.addView(propView)
 
-        propView.layoutParams.height = height/4
-        propView.layoutParams.width = width/4
+        propView.layoutParams.height = height/2
+        propView.layoutParams.width = width/2
         propView.x = 520F
         propView.y = 620F
         //propView.setBackgroundColor(Color.MAGENTA)
         propView.setImageResource(R.drawable.leyland_t1_1024)
 
+        // add listener
+        propView.setOnTouchListener {
+                motionView: View, motionEvent: MotionEvent ->
+            craftViewModel.craftTouch.onTouch(motionView, motionEvent)
+            true
+        }
     }
     ///////////////////////////////////////////////////////////////////////////
     fun saveStageModel() {

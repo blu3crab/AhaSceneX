@@ -83,26 +83,26 @@ class CraftViewModel (val database: StageDatabaseDao,
             Log.e("BindingAdapter", "scenex Glide exception! " + ex.localizedMessage)
         }
     }
-    fun showProp(view: View) {
-        // set image view
-        val imgView = view.findViewById<ImageView>(R.id.imageview_prop)
-        val imgUrl = stageModel.value!!.sceneSrcUrl
-        val imgUri = imgUrl!!.toUri()
-
-        try {
-            Glide.with(imgView.context)
-                .load(imgUri)
-                .apply(
-                    RequestOptions()
-                        .placeholder(R.drawable.loading_animation)
-                        .error(R.drawable.ic_broken_image)
-                )
-                .into(imgView)
-        }
-        catch (ex : Exception) {
-            Log.e("BindingAdapter", "scenex Glide exception! " + ex.localizedMessage)
-        }
-    }
+//    fun showProp(view: View) {
+//        // set image view
+//        val imgView = view.findViewById<ImageView>(R.id.imageview_prop)
+//        val imgUrl = stageModel.value!!.sceneSrcUrl
+//        val imgUri = imgUrl!!.toUri()
+//
+//        try {
+//            Glide.with(imgView.context)
+//                .load(imgUri)
+//                .apply(
+//                    RequestOptions()
+//                        .placeholder(R.drawable.loading_animation)
+//                        .error(R.drawable.ic_broken_image)
+//                )
+//                .into(imgView)
+//        }
+//        catch (ex : Exception) {
+//            Log.e("BindingAdapter", "scenex Glide exception! " + ex.localizedMessage)
+//        }
+//    }
 
     ///////////////////////////////////////////////////////////////////////////
     // update stage model label
