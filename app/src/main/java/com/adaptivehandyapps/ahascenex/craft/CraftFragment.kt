@@ -7,7 +7,6 @@ package com.adaptivehandyapps.ahascenex.craft
 
 import android.annotation.SuppressLint
 import android.graphics.BitmapFactory
-import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -27,7 +26,11 @@ import com.adaptivehandyapps.ahascenex.R
 import com.adaptivehandyapps.ahascenex.databinding.FragmentCraftBinding
 import com.adaptivehandyapps.ahascenex.formatStageModel
 import com.adaptivehandyapps.ahascenex.model.StageDatabase
+import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.google.android.material.snackbar.Snackbar
 
+
+//import kotlinx.android.synthetic.main.activity_main.*
 
 /**
  * A simple [Fragment] subclass as the second destination in the navigation.
@@ -82,47 +85,45 @@ class CraftFragment : Fragment() {
     }
 
     @SuppressLint("ClickableViewAccessibility")
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
+    override fun onViewCreated(viewCraft: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(viewCraft, savedInstanceState)
         // button_save_stage updates DB then navigates back to stage fragment
-        view.findViewById<Button>(R.id.button_save_stage).setOnClickListener {
+        viewCraft.findViewById<Button>(R.id.button_save_stage).setOnClickListener {
             // save stage model
             saveStageModel()
             // navigate back to stage frag
             findNavController().navigate(R.id.action_CraftFragment_to_StageFragment)
         }
         // button_undo_stage restores stage model to previous state
-        view.findViewById<Button>(R.id.button_undo_stage).setOnClickListener {
+        viewCraft.findViewById<Button>(R.id.button_undo_stage).setOnClickListener {
             // undo stage model
             craftViewModel.undoStageModel()
-            craftViewModel.showScene(view)
+            craftViewModel.showScene(viewCraft)
         }
         // button_discard_stage removes the current stage model from the database
-        view.findViewById<Button>(R.id.button_discard_stage).setOnClickListener {
+        viewCraft.findViewById<Button>(R.id.button_discard_stage).setOnClickListener {
             // undo stage model
             craftViewModel.deleteIdFromStageModelDatabase()
             // navigate back to stage frag
             findNavController().navigate(R.id.action_CraftFragment_to_StageFragment)
         }
         // imageview_scene touch interactions
-        view.findViewById<ImageView>(R.id.imageview_scene).setOnTouchListener {
+        viewCraft.findViewById<ImageView>(R.id.imageview_scene).setOnTouchListener {
                 motionView: View, motionEvent: MotionEvent ->
             craftViewModel.craftTouch.onTouch(motionView, motionEvent)
 
             true    // pass touch on
         }
-//        // imageview_scene touch interactions
-//        view.setOnTouchListener {
-//                motionView: View, motionEvent: MotionEvent ->
-//            craftViewModel.craftTouch.onTouch(motionView, motionEvent)
-//
-//            true    // pass touch on
-//        }
-
+        val fabCraft = viewCraft.findViewById<FloatingActionButton>(R.id.fab_craft)
+        fabCraft.setOnClickListener { view ->
+            //fab_craft.setOnClickListener { view ->
+            Snackbar.make(view, "Craft adds a prop!", Snackbar.LENGTH_LONG)
+                .setAction("Action", null).show()
+            addProp(viewCraft)
+        }
         // show scene
-        craftViewModel.showScene(view)
-//        craftViewModel.showProp(view)
-        addProp(view)
+        craftViewModel.showScene(viewCraft)
+        //addProp(view)
     }
     fun addProp(view: View) {
         val craftLayout = view?.findViewById<ConstraintLayout>(R.id.craft_layout)
