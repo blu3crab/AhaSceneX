@@ -12,6 +12,7 @@ import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import com.adaptivehandyapps.ahascenex.R
+import com.adaptivehandyapps.ahascenex.model.StageModel
 import kotlin.math.abs
 import kotlin.math.pow
 import kotlin.math.sqrt
@@ -62,19 +63,24 @@ class CraftTouch {
     var viewportTopEdge = centerY - (viewportHeight/2)
     var viewportBottomEdge = centerY + (viewportHeight/2)
 
-    class ScalePosition (scale: Float, x: Float, y:Float){
+    class ScalePivot (scale: Float, x: Float, y:Float){
         // scene scale & pivot X,Y
         var scale: Float = scale
         var x: Float = x
         var y: Float = y
     }
 
-    var sceneScalePosition = ScalePosition(MIN_SCALE_FACTOR, 0.0F, 0.0F)
+    var sceneScalePivot = ScalePivot(MIN_SCALE_FACTOR, 0.0F, 0.0F)
 
     ///////////////////////////////////////////////////////////////////////////
     init {
     }
 
+    fun setSceneScalePivot(stageModel: StageModel) {
+        sceneScalePivot.scale = stageModel.sceneScale
+        sceneScalePivot.x = stageModel.sceneX
+        sceneScalePivot.y = stageModel.sceneY
+    }
     ///////////////////////////////////////////////////////////////////////////
     // touch handler
     fun onTouch(motionView: View, motionEvent: MotionEvent) {
@@ -167,7 +173,7 @@ class CraftTouch {
                     motionView.scaleX = scaleCurr
                     motionView.scaleY = scaleCurr
                     // if scene is focus, retain scene scale
-                    if (sceneMotion) sceneScalePosition.scale = scaleCurr
+                    if (sceneMotion) sceneScalePivot.scale = scaleCurr
 
                     // reset viewport dims & visible rect for updated scale
                     viewportRectf = getVRect(motionView)
@@ -255,8 +261,8 @@ class CraftTouch {
                             Log.d(TAG, "MotionEvent top/bottom edge test FAIL...")
                         }
                         // if scene is focus, retain pivot X/Y
-                        sceneScalePosition.x = motionView.pivotX
-                        sceneScalePosition.y = motionView.pivotY
+                        sceneScalePivot.x = motionView.pivotX
+                        sceneScalePivot.y = motionView.pivotY
 
                         Log.d(
                             TAG,
