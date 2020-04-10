@@ -6,13 +6,10 @@
 package com.adaptivehandyapps.ahascenex.craft
 
 import android.app.Application
-import android.content.Context
 import android.util.Log
 import android.view.View
-import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.ImageView
-import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.net.toUri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
@@ -56,8 +53,6 @@ class CraftViewModel (val database: StageDatabaseDao,
         // update stage model
         _stageModel.value = updatedStageModel
         Log.d(TAG, "loadStageModel-> " + formatStageModel(stageModel.value))
-//        Log.d(TAG, "updated stageModel id# " + _stageModel.value!!.nickname + " = " + _stageModel.value!!.label +
-//                ", type " + _stageModel.value!!.type + ", uri " + _stageModel.value!!.sceneSrcUrl)
     }
     ///////////////////////////////////////////////////////////////////////////
     //fun showScene(view: View, imgView: ImageView, imgUri: Uri) {
@@ -79,19 +74,22 @@ class CraftViewModel (val database: StageDatabaseDao,
                         .error(R.drawable.ic_broken_image)
                 )
                 .into(imgView)
+            // adjust scale, pivot while maintaining aspect ratio
+            imgView.scaleX = stageModel.value!!.sceneScale
+            imgView.scaleY = stageModel.value!!.sceneScale
+            imgView.pivotX = stageModel.value!!.sceneX
+            imgView.pivotY = stageModel.value!!.sceneY
         }
         catch (ex : Exception) {
             Log.e("BindingAdapter", "scenex Glide exception! " + ex.localizedMessage)
         }
-//        // TODO: adjust scale - bounds locked!
-//        imgView.scaleX = stageModel.value!!.sceneScale
-//        imgView.scaleY = stageModel.value!!.sceneScale
+
     }
 
     ///////////////////////////////////////////////////////////////////////////
     // update stage model label
     fun updateStageModelSceneTouch() {
-        var sceneScalePosition = craftTouch.sceneScalePosition
+        var sceneScalePosition = craftTouch.sceneScalePivot
         stageModel.value!!.sceneScale = sceneScalePosition.scale
         stageModel.value!!.sceneX = sceneScalePosition.x
         stageModel.value!!.sceneY = sceneScalePosition.y
