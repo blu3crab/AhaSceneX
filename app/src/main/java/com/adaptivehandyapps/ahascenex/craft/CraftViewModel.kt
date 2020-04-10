@@ -55,8 +55,9 @@ class CraftViewModel (val database: StageDatabaseDao,
         stageModel.value?.let {stageModelCheckPoint = stageModel.value!!} ?: run {stageModelCheckPoint = updatedStageModel}
         // update stage model
         _stageModel.value = updatedStageModel
-        Log.d(TAG, "updated stageModel id# " + _stageModel.value!!.nickname + " = " + _stageModel.value!!.label +
-                ", type " + _stageModel.value!!.type + ", uri " + _stageModel.value!!.sceneSrcUrl)
+        Log.d(TAG, "loadStageModel-> " + formatStageModel(stageModel.value))
+//        Log.d(TAG, "updated stageModel id# " + _stageModel.value!!.nickname + " = " + _stageModel.value!!.label +
+//                ", type " + _stageModel.value!!.type + ", uri " + _stageModel.value!!.sceneSrcUrl)
     }
     ///////////////////////////////////////////////////////////////////////////
     //fun showScene(view: View, imgView: ImageView, imgUri: Uri) {
@@ -82,30 +83,20 @@ class CraftViewModel (val database: StageDatabaseDao,
         catch (ex : Exception) {
             Log.e("BindingAdapter", "scenex Glide exception! " + ex.localizedMessage)
         }
+//        // TODO: adjust scale - bounds locked!
+//        imgView.scaleX = stageModel.value!!.sceneScale
+//        imgView.scaleY = stageModel.value!!.sceneScale
     }
-//    fun showProp(view: View) {
-//        // set image view
-//        val imgView = view.findViewById<ImageView>(R.id.imageview_prop)
-//        val imgUrl = stageModel.value!!.sceneSrcUrl
-//        val imgUri = imgUrl!!.toUri()
-//
-//        try {
-//            Glide.with(imgView.context)
-//                .load(imgUri)
-//                .apply(
-//                    RequestOptions()
-//                        .placeholder(R.drawable.loading_animation)
-//                        .error(R.drawable.ic_broken_image)
-//                )
-//                .into(imgView)
-//        }
-//        catch (ex : Exception) {
-//            Log.e("BindingAdapter", "scenex Glide exception! " + ex.localizedMessage)
-//        }
-//    }
 
     ///////////////////////////////////////////////////////////////////////////
     // update stage model label
+    fun updateStageModelSceneTouch() {
+        var sceneScalePosition = craftTouch.sceneScalePosition
+        stageModel.value!!.sceneScale = sceneScalePosition.scale
+        stageModel.value!!.sceneX = sceneScalePosition.x
+        stageModel.value!!.sceneY = sceneScalePosition.y
+        Log.d(TAG, "updateStageModelSceneTouch-> " + formatStageModel(stageModel.value))
+    }
     fun updateStageModelLabel(label: String) {
         stageModelCheckPoint.label = stageModel.value!!.label
         stageModel.value!!.label = label
@@ -119,7 +110,7 @@ class CraftViewModel (val database: StageDatabaseDao,
     ///////////////////////////////////////////////////////////////////////////
     // update stage model database
     fun updateStageModelDatabase() {
-        Log.d(TAG, "addStageModel ")
+        Log.d(TAG, "updateStageModelDatabase ")
         uiScope.launch {
             stageModel.value?.let {
                 update(it)

@@ -13,7 +13,8 @@ fun formatStageModel(stageModel: StageModel?, terse: Boolean = false): String {
             return "stageModel nickname# " + stageModel.nickname + " label " + stageModel.label
         }
         return "stageModel id# " + stageModel.nickname + " = " + stageModel.label +
-                ", type " + stageModel.type + ", uri " + stageModel.sceneSrcUrl
+                ", type " + stageModel.type + ", uri " + stageModel.sceneSrcUrl +
+                "\n scene scale = " + stageModel.sceneScale + ", scene x/y = " + stageModel.sceneX + "/" + stageModel.sceneY
     }
     return "stageModel NULL... "
 }

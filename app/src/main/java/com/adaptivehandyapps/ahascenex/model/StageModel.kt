@@ -34,7 +34,13 @@ data class StageModel(
     @ColumnInfo(name = "type")
     var type: String = "nada",
     @ColumnInfo(name = "label")
-    var label: String = "nada") : Parcelable {
+    var label: String = "nada",
+    @ColumnInfo(name = "scene_scale")
+    var sceneScale: Float = 0.0F,
+    @ColumnInfo(name = "scene_x")
+    var sceneX: Float = 0.0F,
+    @ColumnInfo(name = "scene_y")
+    var sceneY: Float = 0.0F) : Parcelable {
 
     val isScene
         get() = type == StageType.SCENE_TYPE.value

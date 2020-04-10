@@ -62,6 +62,14 @@ class CraftTouch {
     var viewportTopEdge = centerY - (viewportHeight/2)
     var viewportBottomEdge = centerY + (viewportHeight/2)
 
+    class ScalePosition (scale: Float, x: Float, y:Float){
+        // scene scale & pivot X,Y
+        var scale: Float = scale
+        var x: Float = x
+        var y: Float = y
+    }
+
+    var sceneScalePosition = ScalePosition(MIN_SCALE_FACTOR, 0.0F, 0.0F)
 
     ///////////////////////////////////////////////////////////////////////////
     init {
@@ -158,6 +166,9 @@ class CraftTouch {
                     // maintain aspect ratio
                     motionView.scaleX = scaleCurr
                     motionView.scaleY = scaleCurr
+                    // if scene is focus, retain scene scale
+                    if (sceneMotion) sceneScalePosition.scale = scaleCurr
+
                     // reset viewport dims & visible rect for updated scale
                     viewportRectf = getVRect(motionView)
                     viewportWidth = motionView.width * motionView.scaleX
@@ -243,6 +254,9 @@ class CraftTouch {
                         } else {
                             Log.d(TAG, "MotionEvent top/bottom edge test FAIL...")
                         }
+                        // if scene is focus, retain pivot X/Y
+                        sceneScalePosition.x = motionView.pivotX
+                        sceneScalePosition.y = motionView.pivotY
 
                         Log.d(
                             TAG,
