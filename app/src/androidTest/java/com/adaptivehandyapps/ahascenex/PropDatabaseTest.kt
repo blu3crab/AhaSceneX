@@ -6,9 +6,7 @@ package com.adaptivehandyapps.ahascenex
 import androidx.room.Room
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
-import com.adaptivehandyapps.ahascenex.model.StageDatabase
-import com.adaptivehandyapps.ahascenex.model.StageDatabaseDao
-import com.adaptivehandyapps.ahascenex.model.StageModel
+import com.adaptivehandyapps.ahascenex.model.*
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
@@ -17,21 +15,21 @@ import org.junit.runner.RunWith
 import java.io.IOException
 
 @RunWith(AndroidJUnit4::class)
-class StageDatabaseTest {
+class PropDatabaseTest {
 
-    private lateinit var stageDao: StageDatabaseDao
-    private lateinit var db: StageDatabase
+    private lateinit var propDao: PropDatabaseDao
+    private lateinit var db: PropDatabase
 
     @Before
     fun createDb() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         // Using an in-memory database because the information stored here disappears when the
         // process is killed.
-        db = Room.inMemoryDatabaseBuilder(context, StageDatabase::class.java)
+        db = Room.inMemoryDatabaseBuilder(context, PropDatabase::class.java)
             // Allowing main thread queries, just for testing.
             .allowMainThreadQueries()
             .build()
-        stageDao = db.stageDatabaseDao
+        propDao = db.propDatabaseDao
     }
 
     @After
@@ -43,19 +41,19 @@ class StageDatabaseTest {
     @Test
     @Throws(Exception::class)
     fun insertAndGetLast() {
-        val stageModel = StageModel()
-        stageDao.insert(stageModel)
-        val tonight = stageDao.getLast()
-        assertEquals(stageModel?.label, "nada")
+        val propModel = PropModel()
+        propDao.insert(propModel)
+        val tonight = propDao.getLast()
+        assertEquals(propModel?.label, "nada")
     }
 
     @Test
     @Throws(Exception::class)
     fun insertUpdateAndGetLast() {
-        val stageModel = StageModel()
-        stageModel.nickname = "1234"
-        stageDao.insert(stageModel)
-        val lastStageModel = stageDao.getLast()
-        assertEquals(stageModel?.nickname, "1234")
+        val propModel = PropModel()
+        propModel.nickname = "1234"
+        propDao.insert(propModel)
+        val lastStageModel = propDao.getLast()
+        assertEquals(propModel?.nickname, "1234")
     }
 }
