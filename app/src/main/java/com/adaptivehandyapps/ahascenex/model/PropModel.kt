@@ -25,20 +25,24 @@ data class PropModel(
     @PrimaryKey(autoGenerate = true)
     var tableId: Long = 0L,
 
+    @ColumnInfo(name = "prop_res_id")
+    var propResId: Int = 0,
+    @ColumnInfo(name = "stage_id")
+    var stageId: Long = 0L,
+
     @ColumnInfo(name = "nickname")
     var nickname: String = "nada",
-    @ColumnInfo(name = "scene_src_url")
-    var sceneSrcUrl: String = "nada",
     @ColumnInfo(name = "type")
     var type: String = "nada",
     @ColumnInfo(name = "label")
     var label: String = "nada",
-    @ColumnInfo(name = "scene_scale")
-    var sceneScale: Float = 0.0F,
-    @ColumnInfo(name = "scene_x")
-    var sceneX: Float = 0.0F,
-    @ColumnInfo(name = "scene_y")
-    var sceneY: Float = 0.0F) : Parcelable {
+
+    @ColumnInfo(name = "prop_scale")
+    var propScale: Float = 0.0F,
+    @ColumnInfo(name = "prop_x")
+    var propX: Float = 0.0F,
+    @ColumnInfo(name = "prop_y")
+    var propY: Float = 0.0F) : Parcelable {
 
     val isProp
         get() = type == StageType.PROP_TYPE.value

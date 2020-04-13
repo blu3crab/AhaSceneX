@@ -19,7 +19,7 @@ interface PropDatabaseDao {
     fun update(propModel: PropModel)
 
     @Query ("DELETE FROM prop_model_table WHERE tableId = :key")
-    fun deleteStageModel(key: Long)
+    fun deletePropModel(key: Long)
 
     @Query ("SELECT * from prop_model_table WHERE tableId = :key")
     fun get(key: Long): PropModel?

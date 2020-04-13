@@ -14,7 +14,6 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
-import android.widget.EditText
 import android.widget.ImageView
 import android.widget.Toast
 import androidx.constraintlayout.widget.ConstraintLayout
@@ -25,6 +24,7 @@ import androidx.navigation.fragment.findNavController
 import com.adaptivehandyapps.ahascenex.R
 import com.adaptivehandyapps.ahascenex.databinding.FragmentCraftBinding
 import com.adaptivehandyapps.ahascenex.formatStageModel
+import com.adaptivehandyapps.ahascenex.model.PropDatabase
 import com.adaptivehandyapps.ahascenex.model.StageDatabase
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.Snackbar
@@ -41,6 +41,8 @@ class CraftFragment : Fragment() {
     private lateinit var craftViewModel: CraftViewModel
     private lateinit var binding: FragmentCraftBinding
 
+//    private var resSeedId: Int = R.drawable.prop_flower_t1_1024
+
     override fun onCreateView(
             inflater: LayoutInflater, container: ViewGroup?,
             savedInstanceState: Bundle?
@@ -55,10 +57,11 @@ class CraftFragment : Fragment() {
         // Room: application & database for viewmodel instantiation
         val application = requireNotNull(this.activity).application
 
-        val dataSource = StageDatabase.getInstance(application).stageDatabaseDao
+        val stageDataSource = StageDatabase.getInstance(application).stageDatabaseDao
+        val propDataSource = PropDatabase.getInstance(application).propDatabaseDao
 
         // reference to the ViewModel associated with this fragment
-        val viewModelFactory = CraftViewModelFactory(dataSource, application)
+        val viewModelFactory = CraftViewModelFactory(stageDataSource, propDataSource, application)
         craftViewModel = ViewModelProvider(this, viewModelFactory).get(CraftViewModel::class.java)
 
         // bind view model
@@ -74,8 +77,6 @@ class CraftFragment : Fragment() {
         //stageModel.type = args.stageModelType
         //stageModel.sceneSrcUrl = args.stageModelSceneSrcUrl
 
-        //Toast.makeText(context, "testInt: ${args.testInt}, testString: ${args.testString}", Toast.LENGTH_LONG).show()
-        //Toast.makeText(context, "testInt: ${args.testInt}, testString: ${args.testString}", Toast.LENGTH_LONG).show()
         Toast.makeText(context, "stageModel id#  ${stageModel.nickname} = ${stageModel.label}", Toast.LENGTH_LONG).show()
         //Log.d(TAG, "stageModel id# " + stageModel.nickname + " = " + stageModel.label + ", type " + stageModel.type + ", uri " + stageModel.sceneSrcUrl)
         Log.d(TAG, "onCreateView SafeArgs-> " + formatStageModel(stageModel))
@@ -90,7 +91,7 @@ class CraftFragment : Fragment() {
         // button_save_stage updates DB then navigates back to stage fragment
         viewCraft.findViewById<Button>(R.id.button_save_stage).setOnClickListener {
             // save stage model
-            saveStageModel()
+            craftViewModel.saveStageModel(viewCraft)
             // navigate back to stage frag
             findNavController().navigate(R.id.action_CraftFragment_to_StageFragment)
         }
@@ -120,54 +121,72 @@ class CraftFragment : Fragment() {
             //fab_craft.setOnClickListener { view ->
             Snackbar.make(view, "Craft adds a prop!", Snackbar.LENGTH_LONG)
                 .setAction("Action", null).show()
-            addProp(viewCraft)
+            val thisContext = context
+            craftViewModel.addProp(viewCraft, context!!)
         }
         // show scene
         craftViewModel.showScene(viewCraft)
+
+        // TODO: get props, add to view
         //addProp(view)
     }
-    fun addProp(view: View) {
-        val craftLayout = view?.findViewById<ConstraintLayout>(R.id.craft_layout)
-
-        val dimensions = BitmapFactory.Options()
-        dimensions.inJustDecodeBounds = true
-        val mBitmap = BitmapFactory.decodeResource(resources, R.drawable.leyland_t1_1024, dimensions)
-        val height = dimensions.outHeight
-        val width = dimensions.outWidth
-
-        var propView: ImageView
-
-        propView = ImageView(context)
-
-        craftLayout.addView(propView)
-
-        propView.layoutParams.height = height/2
-        propView.layoutParams.width = width/2
-        propView.x = 520F
-        propView.y = 620F
-        //propView.setBackgroundColor(Color.MAGENTA)
-        propView.setImageResource(R.drawable.leyland_t1_1024)
-
-        // add listener
-        propView.setOnTouchListener {
-                motionView: View, motionEvent: MotionEvent ->
-            craftViewModel.craftTouch.onTouch(motionView, motionEvent)
-            // TODO: capture results of scene touch motion events
-
-            true
-        }
-    }
-    ///////////////////////////////////////////////////////////////////////////
-    fun saveStageModel() {
-        // save label
-        val editText = view?.findViewById<EditText>(R.id.edittext_scene_label)
-        val label = editText?.text
-        Log.d(TAG, "edittext_scene_label " + label + "...")
-        //craftViewModel.stageModel.value!!.label = label.toString()
-        craftViewModel.updateStageModelLabel(label.toString())
-        // update database
-        craftViewModel.updateStageModelDatabase()
-    }
+//    fun addProp(view: View) {
+//        val craftLayout = view?.findViewById<ConstraintLayout>(R.id.craft_layout)
+//
+//        resSeedId = cycleProp(resSeedId)
+//        val dimensions = BitmapFactory.Options()
+//        dimensions.inJustDecodeBounds = true
+//        val mBitmap = BitmapFactory.decodeResource(resources, resSeedId, dimensions)
+//        val height = dimensions.outHeight
+//        val width = dimensions.outWidth
+//
+//        var propView: ImageView
+//
+//        propView = ImageView(context)
+//
+//        craftLayout.addView(propView)
+//
+//        propView.layoutParams.height = height/2
+//        propView.layoutParams.width = width/2
+//        propView.x = 520F
+//        propView.y = 620F
+//        //propView.setBackgroundColor(Color.MAGENTA)
+//        propView.setImageResource(resSeedId)
+//
+//        // add listener
+//        propView.setOnTouchListener {
+//                motionView: View, motionEvent: MotionEvent ->
+//            craftViewModel.craftTouch.onTouch(motionView, motionEvent)
+//            // TODO: capture results of scene touch motion events
+//
+//            true
+//        }
+//
+//        // TODO: add prop to DB
+//    }
+//
+//    fun cycleProp(resIdSeed: Int): Int {
+//        var resId = resIdSeed
+//        when (resId) {
+//            R.drawable.prop_flower_t1_1024 -> resId = R.drawable.prop_holly_large_t1_1024
+//            R.drawable.prop_holly_large_t1_1024 -> resId = R.drawable.prop_laurel_small_t1_1024
+//            R.drawable.prop_laurel_small_t1_1024 -> resId = R.drawable.prop_leyland_t1_1024
+//            R.drawable.prop_leyland_t1_1024 -> resId = R.drawable.prop_leyland_t2_1024
+//            else -> resId = R.drawable.prop_flower_t1_1024
+//        }
+//        return resId
+//    }
+//    ///////////////////////////////////////////////////////////////////////////
+//    fun saveStageModel() {
+//        // save label
+//        val editText = view?.findViewById<EditText>(R.id.edittext_scene_label)
+//        val label = editText?.text
+//        Log.d(TAG, "edittext_scene_label " + label + "...")
+//        //craftViewModel.stageModel.value!!.label = label.toString()
+//        craftViewModel.updateStageModelLabel(label.toString())
+//        // update database
+//        craftViewModel.updateStageModelDatabase()
+//    }
     ///////////////////////////////////////////////////////////////////////////
     override fun onStart() {
         Log.i(TAG, "onStart invoked...")

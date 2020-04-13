@@ -6,16 +6,22 @@
 package com.adaptivehandyapps.ahascenex.craft
 
 import android.app.Application
+import android.content.res.Resources
+import android.graphics.BitmapFactory
 import android.util.Log
+import android.view.MotionEvent
 import android.view.View
 import android.widget.EditText
 import android.widget.ImageView
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.net.toUri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.adaptivehandyapps.ahascenex.R
 import com.adaptivehandyapps.ahascenex.formatStageModel
+import com.adaptivehandyapps.ahascenex.model.PropDatabaseDao
+import com.adaptivehandyapps.ahascenex.model.PropModel
 import com.adaptivehandyapps.ahascenex.model.StageDatabaseDao
 import com.adaptivehandyapps.ahascenex.model.StageModel
 import com.bumptech.glide.Glide
@@ -24,7 +30,8 @@ import kotlinx.coroutines.*
 
 ///////////////////////////////////////////////////////////////////////////
 //class CraftViewModel : ViewModel()
-class CraftViewModel (val database: StageDatabaseDao,
+class CraftViewModel (val stageDatabase: StageDatabaseDao,
+                      val propDatabase: PropDatabaseDao,
                       application: Application) : AndroidViewModel(application)
 {
     private val TAG = "CraftViewModel"
@@ -42,8 +49,31 @@ class CraftViewModel (val database: StageDatabaseDao,
     // touch handler for scene zoom & pan
     var craftTouch: CraftTouch = CraftTouch()
 
+    var propModelList: MutableList<PropModel> = mutableListOf<PropModel>()
+
+    private var resSeedId: Int = R.drawable.prop_flower_t1_1024
+
     ///////////////////////////////////////////////////////////////////////////
     init {
+        getPropList()
+        Log.d(TAG, "propModelList size " + propModelList.size)
+    }
+    ///////////////////////////////////////////////////////////////////////////
+    private fun getPropList() {
+        uiScope.launch {
+            propModelList = getPropListFromDatabase()
+            Log.d(TAG, "getPropList size = " + propModelList.size)
+        }
+    }
+
+    private suspend fun getPropListFromDatabase(): MutableList<PropModel> {
+        return withContext(Dispatchers.IO) {
+            var list: MutableList<PropModel> = propDatabase.getAll()
+            if (list == null){
+                list = mutableListOf<PropModel>()
+            }
+            list
+        }
     }
     ///////////////////////////////////////////////////////////////////////////
     // frag initialization sets stage model after unbundling args
@@ -55,7 +85,6 @@ class CraftViewModel (val database: StageDatabaseDao,
         Log.d(TAG, "loadStageModel-> " + formatStageModel(stageModel.value))
     }
     ///////////////////////////////////////////////////////////////////////////
-    //fun showScene(view: View, imgView: ImageView, imgUri: Uri) {
     fun showScene(view: View) {
         // set label
         val editTextSceneLabel = view.findViewById<EditText>(R.id.edittext_scene_label)
@@ -84,6 +113,64 @@ class CraftViewModel (val database: StageDatabaseDao,
             Log.e("BindingAdapter", "scenex Glide exception! " + ex.localizedMessage)
         }
 
+    }
+    fun addProp(view: View, context: android.content.Context) {
+        val craftLayout = view?.findViewById<ConstraintLayout>(R.id.craft_layout)
+
+        resSeedId = cycleProp(resSeedId)
+        val dimensions = BitmapFactory.Options()
+        dimensions.inJustDecodeBounds = true
+//        val mBitmap = BitmapFactory.decodeResource(resources, resSeedId, dimensions)
+        val mBitmap = BitmapFactory.decodeResource(context.resources, resSeedId, dimensions)
+        val height = dimensions.outHeight
+        val width = dimensions.outWidth
+
+        var propView: ImageView
+
+        propView = ImageView(context)
+
+        craftLayout.addView(propView)
+
+        propView.layoutParams.height = height/2
+        propView.layoutParams.width = width/2
+        propView.x = 520F
+        propView.y = 620F
+        //propView.setBackgroundColor(Color.MAGENTA)
+        propView.setImageResource(resSeedId)
+
+        // add listener
+        propView.setOnTouchListener {
+                motionView: View, motionEvent: MotionEvent ->
+            craftTouch.onTouch(motionView, motionEvent)
+            // TODO: capture results of scene touch motion events
+
+            true
+        }
+
+        // TODO: add prop to DB
+    }
+
+    fun cycleProp(resIdSeed: Int): Int {
+        var resId = resIdSeed
+        when (resId) {
+            R.drawable.prop_flower_t1_1024 -> resId = R.drawable.prop_holly_large_t1_1024
+            R.drawable.prop_holly_large_t1_1024 -> resId = R.drawable.prop_laurel_small_t1_1024
+            R.drawable.prop_laurel_small_t1_1024 -> resId = R.drawable.prop_leyland_t1_1024
+            R.drawable.prop_leyland_t1_1024 -> resId = R.drawable.prop_leyland_t2_1024
+            else -> resId = R.drawable.prop_flower_t1_1024
+        }
+        return resId
+    }
+    ///////////////////////////////////////////////////////////////////////////
+    fun saveStageModel(view: View) {
+        // save label
+        val editText = view?.findViewById<EditText>(R.id.edittext_scene_label)
+        val label = editText?.text
+        Log.d(TAG, "edittext_scene_label " + label + "...")
+        //craftViewModel.stageModel.value!!.label = label.toString()
+        updateStageModelLabel(label.toString())
+        // update database
+        updateStageModelDatabase()
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -118,7 +205,7 @@ class CraftViewModel (val database: StageDatabaseDao,
     }
     private suspend fun update(stageModel: StageModel) {
         withContext(Dispatchers.IO) {
-            database.update(stageModel)
+            stageDatabase.update(stageModel)
         }
     }
     ///////////////////////////////////////////////////////////////////////////
@@ -135,7 +222,7 @@ class CraftViewModel (val database: StageDatabaseDao,
     private suspend fun delete(stageModel: StageModel) {
         withContext(Dispatchers.IO) {
             Log.d(TAG, "delete " + stageModel.tableId)
-            database.deleteStageModel(stageModel.tableId)
+            stageDatabase.deleteStageModel(stageModel.tableId)
         }
     }
     ///////////////////////////////////////////////////////////////////////////
