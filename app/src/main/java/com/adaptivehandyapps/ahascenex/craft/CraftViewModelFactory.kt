@@ -15,12 +15,13 @@ import java.lang.IllegalArgumentException
 class CraftViewModelFactory (
     private val stageDataSource: StageDatabaseDao,
     private val propDataSource: PropDatabaseDao,
+    private val context: android.content.Context,
     private val application: Application) : ViewModelProvider.Factory
 {
     @Suppress("unchecked_cast")
     override fun <T: ViewModel?> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(CraftViewModel::class.java)) {
-            return CraftViewModel(stageDataSource, propDataSource, application) as T
+            return CraftViewModel(stageDataSource, propDataSource, context, application) as T
         }
         throw IllegalArgumentException("Oops! unknown ViewModel class...")
     }

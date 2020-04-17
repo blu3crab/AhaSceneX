@@ -6,7 +6,6 @@
 package com.adaptivehandyapps.ahascenex.craft
 
 import android.app.Application
-import android.content.res.Resources
 import android.graphics.BitmapFactory
 import android.util.Log
 import android.view.MotionEvent
@@ -19,6 +18,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.adaptivehandyapps.ahascenex.R
+import com.adaptivehandyapps.ahascenex.formatPropModel
 import com.adaptivehandyapps.ahascenex.formatStageModel
 import com.adaptivehandyapps.ahascenex.model.PropDatabaseDao
 import com.adaptivehandyapps.ahascenex.model.PropModel
@@ -32,6 +32,7 @@ import kotlinx.coroutines.*
 //class CraftViewModel : ViewModel()
 class CraftViewModel (val stageDatabase: StageDatabaseDao,
                       val propDatabase: PropDatabaseDao,
+                      val context: android.content.Context,
                       application: Application) : AndroidViewModel(application)
 {
     private val TAG = "CraftViewModel"
@@ -49,20 +50,36 @@ class CraftViewModel (val stageDatabase: StageDatabaseDao,
     // touch handler for scene zoom & pan
     var craftTouch: CraftTouch = CraftTouch()
 
-    var propModelList: MutableList<PropModel> = mutableListOf<PropModel>()
+    private var _propList = MutableLiveData<MutableList<PropModel>>()
+    val propList: LiveData<MutableList<PropModel>>
+        get() = _propList
+
+    // TODO: map ImageView to prop list
+    var propViewList: MutableList<ImageView> = mutableListOf<ImageView>()
+
+    enum class PropNicknameEnum(val nickname: String) {
+        PROP_LEYLAND_T2("prop_leyland_t2_1024"),
+        PROP_HOLLY_LARGE_T1("prop_holly_large_t1_1024"),
+        PROP_LAUREL_SMALL_T1("prop_laurel_small_t1_1024"),
+        PROP_LEYLAND_T1("prop_leyland_t1_1024"),
+        PROP_FLOWER_T1("prop_flower_t1_1024")
+    }
 
     private var resSeedId: Int = R.drawable.prop_flower_t1_1024
+    private var resNickname: String = "prop_flower_t1_1024"
 
     ///////////////////////////////////////////////////////////////////////////
     init {
-        getPropList()
-        Log.d(TAG, "propModelList size " + propModelList.size)
     }
     ///////////////////////////////////////////////////////////////////////////
-    private fun getPropList() {
+    // PROP database
+    fun getPropList(viewCraft: View) {
         uiScope.launch {
-            propModelList = getPropListFromDatabase()
-            Log.d(TAG, "getPropList size = " + propModelList.size)
+//            propModelList = getPropListFromDatabase()
+//            Log.d(TAG, "getPropList size = " + propModelList.size)
+            _propList.value = getPropListFromDatabase()
+            Log.d(TAG, "getPropList size = " + _propList.value!!.size)
+            showScene(viewCraft)
         }
     }
 
@@ -84,13 +101,13 @@ class CraftViewModel (val stageDatabase: StageDatabaseDao,
         _stageModel.value = updatedStageModel
         Log.d(TAG, "loadStageModel-> " + formatStageModel(stageModel.value))
     }
-    ///////////////////////////////////////////////////////////////////////////
-    fun showScene(view: View) {
+    // draw scene, label & existing props
+    fun showScene(viewCraft: View) {
         // set label
-        val editTextSceneLabel = view.findViewById<EditText>(R.id.edittext_scene_label)
+        val editTextSceneLabel = viewCraft.findViewById<EditText>(R.id.edittext_scene_label)
         editTextSceneLabel.setText(_stageModel.value!!.label)
         // set image view
-        val imgView = view.findViewById<ImageView>(R.id.imageview_scene)
+        val imgView = viewCraft.findViewById<ImageView>(R.id.imageview_scene)
         val imgUrl = stageModel.value!!.sceneSrcUrl
         val imgUri = imgUrl!!.toUri()
 
@@ -103,24 +120,42 @@ class CraftViewModel (val stageDatabase: StageDatabaseDao,
                         .error(R.drawable.ic_broken_image)
                 )
                 .into(imgView)
-            // adjust scale, pivot while maintaining aspect ratio
-            imgView.scaleX = stageModel.value!!.sceneScale
-            imgView.scaleY = stageModel.value!!.sceneScale
-            imgView.pivotX = stageModel.value!!.sceneX
-            imgView.pivotY = stageModel.value!!.sceneY
+            if (stageModel.value!!.sceneScale != 0.0F) {
+                // adjust scale, pivot while maintaining aspect ratio
+                imgView.scaleX = stageModel.value!!.sceneScale
+                imgView.scaleY = stageModel.value!!.sceneScale
+                imgView.pivotX = stageModel.value!!.sceneX
+                imgView.pivotY = stageModel.value!!.sceneY
+            }
         }
         catch (ex : Exception) {
             Log.e("BindingAdapter", "scenex Glide exception! " + ex.localizedMessage)
         }
-
+        //getPropList() // async process!
+        Log.d(TAG, "propModelList size " + (propList.value?.size ?: "undefined"))
+        // for each prop in prop list
+        _propList.value?.let {
+            for (propModel in _propList.value!!.listIterator()) {
+                Log.d(TAG, "showScene for " + formatPropModel(propModel, false))
+                Log.d(TAG, "propModel.stageId == stageModel.tableId?" + propModel.stageId + "==" + stageModel.value!!.tableId)
+                // if prop on this stage
+                if (propModel.stageId == stageModel.value!!.tableId) {
+                    // add prop view
+                    addPropView(viewCraft, false)
+                    Log.d(TAG, "showScene after addPropView for " + formatPropModel(propModel, false))
+                }
+            }
+        }
     }
-    fun addProp(view: View, context: android.content.Context) {
-        val craftLayout = view?.findViewById<ConstraintLayout>(R.id.craft_layout)
+    // add prop to stage view
+    fun addPropView(stageView: View, addToDB: Boolean) {
+        //fun addProp(view: View, context: android.content.Context) {
+        val craftLayout = stageView?.findViewById<ConstraintLayout>(R.id.craft_layout)
 
         resSeedId = cycleProp(resSeedId)
+        resNickname = syncPropNickname(resSeedId)
         val dimensions = BitmapFactory.Options()
         dimensions.inJustDecodeBounds = true
-//        val mBitmap = BitmapFactory.decodeResource(resources, resSeedId, dimensions)
         val mBitmap = BitmapFactory.decodeResource(context.resources, resSeedId, dimensions)
         val height = dimensions.outHeight
         val width = dimensions.outWidth
@@ -133,7 +168,7 @@ class CraftViewModel (val stageDatabase: StageDatabaseDao,
 
         propView.layoutParams.height = height/2
         propView.layoutParams.width = width/2
-        propView.x = 520F
+        propView.x = 520F   // TODO: center in stage dynamically
         propView.y = 620F
         //propView.setBackgroundColor(Color.MAGENTA)
         propView.setImageResource(resSeedId)
@@ -147,20 +182,95 @@ class CraftViewModel (val stageDatabase: StageDatabaseDao,
             true
         }
 
-        // TODO: add prop to DB
+        // add prop to DB
+        if (addToDB) addPropModel(propView, resSeedId)
     }
 
     fun cycleProp(resIdSeed: Int): Int {
         var resId = resIdSeed
         when (resId) {
-            R.drawable.prop_flower_t1_1024 -> resId = R.drawable.prop_holly_large_t1_1024
+            R.drawable.prop_flower_t1_1024 -> resId = R.drawable.prop_leyland_t2_1024
+            R.drawable.prop_leyland_t2_1024 -> resId = R.drawable.prop_holly_large_t1_1024
             R.drawable.prop_holly_large_t1_1024 -> resId = R.drawable.prop_laurel_small_t1_1024
             R.drawable.prop_laurel_small_t1_1024 -> resId = R.drawable.prop_leyland_t1_1024
-            R.drawable.prop_leyland_t1_1024 -> resId = R.drawable.prop_leyland_t2_1024
             else -> resId = R.drawable.prop_flower_t1_1024
         }
         return resId
     }
+    fun syncPropNickname(resId: Int): String {
+        var resNickname = PropNicknameEnum.PROP_FLOWER_T1
+        when (resId) {
+            R.drawable.prop_leyland_t2_1024 -> resNickname = PropNicknameEnum.PROP_LEYLAND_T2
+            R.drawable.prop_holly_large_t1_1024 -> resNickname = PropNicknameEnum.PROP_HOLLY_LARGE_T1
+            R.drawable.prop_laurel_small_t1_1024 -> resNickname = PropNicknameEnum.PROP_LAUREL_SMALL_T1
+            R.drawable.prop_leyland_t1_1024 -> resNickname = PropNicknameEnum.PROP_LEYLAND_T1
+            else -> resNickname = PropNicknameEnum.PROP_FLOWER_T1
+        }
+        return resNickname.toString()
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // PROP Database
+    // generate prop model & associate with prop view
+    // add prop model attributes
+    fun addPropModel(propView: ImageView, resId: Int) {
+        // capture prop model attributes
+        var propModel = PropModel()
+//      "propModel id# " + propModel.nickname + " = " + propModel.label + ", type " + propModel.type +
+//      "\n res id " + propModel.propResId + ", stage id " + propModel.stageId +
+//      "\n prop scale = " + propModel.propScale + ", prop x/y = " + propModel.propX + "/" + propModel.propY
+        propModel.stageId = stageModel.value!!.tableId
+        propModel.propResId = resId
+        propModel.nickname = resNickname
+        //propModel.type = PropType.PROP_TYPE.toString()
+        //propModel.label = "nada"
+        propModel.propScale = propView.scaleX
+        propModel.propX = propView.x
+        propModel.propY = propView.y
+
+        // insert prop model in DB
+        insertPropModelDatabase(propModel)
+        // add to prop view to prop view list
+        propViewList.add(propView)
+    }
+    // add to prop model database
+    fun insertPropModelDatabase(propModel: PropModel) {
+        Log.d(TAG, "insertPropModelDatabase ")
+        uiScope.launch {
+            propModel?.let {
+                insert(it)
+                Log.d(TAG, "insertPropModelDatabase DB update for " + formatPropModel(propModel, false))
+            }
+        }
+    }
+    private suspend fun insert(propModel: PropModel) {
+        withContext(Dispatchers.IO) {
+            propDatabase.insert(propModel)
+        }
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // discard scene from stage model database
+    fun deleteStageIdFromPropModelDatabase() {
+        Log.d(TAG, "deleteIdFromStageModelDatabase ")
+        uiScope.launch {
+            stageModel?.let {
+                for (propModel in _propList.value!!.listIterator()) {
+                    if (propModel.stageId == stageModel.value!!.tableId) {
+                        Log.d(TAG,"deleteStageIdFromPropModelDatabase " + formatPropModel(propModel,false))
+                        deleteProp(propModel)
+                    }
+                }
+            }
+        }
+    }
+    private suspend fun deleteProp(propModel: PropModel) {
+        withContext(Dispatchers.IO) {
+            Log.d(TAG, "delete " + propModel.tableId)
+            propDatabase.deletePropModel(propModel.tableId)
+        }
+    }
+
     ///////////////////////////////////////////////////////////////////////////
     fun saveStageModel(view: View) {
         // save label
@@ -174,7 +284,7 @@ class CraftViewModel (val stageDatabase: StageDatabaseDao,
     }
 
     ///////////////////////////////////////////////////////////////////////////
-    // update stage model label
+    // update stage model scene scale & pivot
     fun updateStageModelSceneTouch() {
         var sceneScalePosition = craftTouch.sceneScalePivot
         stageModel.value!!.sceneScale = sceneScalePosition.scale
@@ -182,6 +292,7 @@ class CraftViewModel (val stageDatabase: StageDatabaseDao,
         stageModel.value!!.sceneY = sceneScalePosition.y
         Log.d(TAG, "updateStageModelSceneTouch-> " + formatStageModel(stageModel.value))
     }
+    // update stage model label
     fun updateStageModelLabel(label: String) {
         stageModelCheckPoint.label = stageModel.value!!.label
         stageModel.value!!.label = label
@@ -193,6 +304,7 @@ class CraftViewModel (val stageDatabase: StageDatabaseDao,
         Log.d(TAG, "undoStageModel with checkpoint " + formatStageModel(stageModel.value, false))
     }
     ///////////////////////////////////////////////////////////////////////////
+    // STAGE Database
     // update stage model database
     fun updateStageModelDatabase() {
         Log.d(TAG, "updateStageModelDatabase ")

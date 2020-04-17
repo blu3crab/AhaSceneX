@@ -6,7 +6,6 @@
 package com.adaptivehandyapps.ahascenex.craft
 
 import android.annotation.SuppressLint
-import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -16,7 +15,6 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.Toast
-import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
@@ -101,7 +99,9 @@ class CraftFragment : Fragment() {
         }
         // button_discard_stage removes the current stage model from the database
         viewCraft.findViewById<Button>(R.id.button_discard_stage).setOnClickListener {
-            // undo stage model
+            // discard stage model
+            craftViewModel.deleteStageIdFromPropModelDatabase()
+            // discard stage model
             craftViewModel.deleteIdFromStageModelDatabase()
             // navigate back to stage frag
             findNavController().navigate(R.id.action_CraftFragment_to_StageFragment)
@@ -120,10 +120,13 @@ class CraftFragment : Fragment() {
             Snackbar.make(view, "Craft adds a prop!", Snackbar.LENGTH_LONG)
                 .setAction("Action", null).show()
             val thisContext = context
-            craftViewModel.addProp(viewCraft)
+            craftViewModel.addPropView(viewCraft, true)
         }
-        // show scene
-        craftViewModel.showScene(viewCraft)
+        // get prop list
+        craftViewModel.getPropList(viewCraft)
+
+//        // show scene
+//        craftViewModel.showScene(viewCraft)
     }
     ///////////////////////////////////////////////////////////////////////////
     override fun onStart() {

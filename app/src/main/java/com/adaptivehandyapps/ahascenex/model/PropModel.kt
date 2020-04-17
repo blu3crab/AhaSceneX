@@ -7,11 +7,13 @@ package com.adaptivehandyapps.ahascenex.model
 
 import android.net.Uri
 import android.os.Parcelable
+import android.widget.ImageView
 import kotlinx.android.parcel.Parcelize
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
+// TODO: re-factor StageType & PropType
 enum class PropType(val value: String) {
     SCENE_TYPE("scene"),
     PROP_TYPE("prop"),
@@ -33,7 +35,7 @@ data class PropModel(
     @ColumnInfo(name = "nickname")
     var nickname: String = "nada",
     @ColumnInfo(name = "type")
-    var type: String = "nada",
+    var type: String = PropType.PROP_TYPE.toString(),
     @ColumnInfo(name = "label")
     var label: String = "nada",
 
