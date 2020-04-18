@@ -50,12 +50,16 @@ class CraftViewModel (val stageDatabase: StageDatabaseDao,
     // touch handler for scene zoom & pan
     var craftTouch: CraftTouch = CraftTouch()
 
+    // prop list is all props for all stages
     private var _propList = MutableLiveData<MutableList<PropModel>>()
     val propList: LiveData<MutableList<PropModel>>
         get() = _propList
 
-    // TODO: map ImageView to prop list
+    // prop view maps to prop list via list index
     var propViewList: MutableList<ImageView> = mutableListOf<ImageView>()
+
+    // current prop
+    var currentPropIndex = -1
 
     enum class PropNicknameEnum(val nickname: String) {
         PROP_LEYLAND_T2("prop_leyland_t2_1024"),
@@ -79,6 +83,8 @@ class CraftViewModel (val stageDatabase: StageDatabaseDao,
 //            Log.d(TAG, "getPropList size = " + propModelList.size)
             _propList.value = getPropListFromDatabase()
             Log.d(TAG, "getPropList size = " + _propList.value!!.size)
+            currentPropIndex =  _propList.value!!.size - 1
+            Log.d(TAG, "getPropList current prop = " + formatPropModel(_propList.value!!.get(currentPropIndex)))
             showScene(viewCraft)
         }
     }
@@ -178,12 +184,20 @@ class CraftViewModel (val stageDatabase: StageDatabaseDao,
                 motionView: View, motionEvent: MotionEvent ->
             craftTouch.onTouch(motionView, motionEvent)
             // TODO: capture results of scene touch motion events
+            // capture results of prop touch motion events
+            updatePropModelSceneTouch(motionView)
 
             true
         }
 
         // add prop to DB
         if (addToDB) addPropModel(propView, resSeedId)
+
+        // add to prop view to prop view list
+        propViewList.add(propView)
+
+        // map prop to view setting as current prop
+        mapPropViewToPropModel(propView)
     }
 
     fun cycleProp(resIdSeed: Int): Int {
@@ -230,8 +244,6 @@ class CraftViewModel (val stageDatabase: StageDatabaseDao,
 
         // insert prop model in DB
         insertPropModelDatabase(propModel)
-        // add to prop view to prop view list
-        propViewList.add(propView)
     }
     // add to prop model database
     fun insertPropModelDatabase(propModel: PropModel) {
@@ -248,10 +260,73 @@ class CraftViewModel (val stageDatabase: StageDatabaseDao,
             propDatabase.insert(propModel)
         }
     }
-
     ///////////////////////////////////////////////////////////////////////////
-    // discard scene from stage model database
-    fun deleteStageIdFromPropModelDatabase() {
+    // update prop model scale & x,y
+    fun updatePropModelSceneTouch(motionView: View) {
+        var propScalePivot = craftTouch.propScalePivot
+        var propModel = mapPropViewToPropModel(motionView)
+        propModel.propScale = propScalePivot.scale
+        propModel.propX = propScalePivot.x
+        propModel.propY = propScalePivot.y
+        updatePropModelDatabase(propModel)
+        Log.d(TAG, "updatePropModelSceneTouch-> " + formatPropModel(propModel))
+    }
+    // map prop view to prop model
+    fun mapPropViewToPropModel(motionView: View): PropModel {
+        var i = 0
+        for (propView in propViewList) {
+            if (propView == motionView) {
+                Log.d(TAG, "mapPropViewToPropModel propView found at position " + i)
+                currentPropIndex = i
+                return propList.value!!.get(i)
+            }
+            i += 1
+        }
+        return propList.value!!.get(i)
+    }
+    // update to prop model database
+    fun updatePropModelDatabase(propModel: PropModel) {
+        Log.d(TAG, "updatePropModelDatabase ")
+        uiScope.launch {
+            propModel?.let {
+                update(it)
+                Log.d(TAG, "updatePropModelDatabase DB update for " + formatPropModel(propModel, false))
+            }
+        }
+    }
+    private suspend fun update(propModel: PropModel) {
+        withContext(Dispatchers.IO) {
+            propDatabase.update(propModel)
+        }
+    }
+    ///////////////////////////////////////////////////////////////////////////
+    // remove current prop & redraw
+    fun removeCurrentProp() {
+        if (currentPropIndex > -1) {
+            var propModel = _propList.value!!.get(currentPropIndex)
+            // remove prop in DB
+            deletePropModelDatabase(propModel)
+            // remove prop in view list
+            propViewList.removeAt(currentPropIndex)
+
+            // remove prop in prop list
+            _propList.value!!.removeAt(currentPropIndex)
+
+            // indicate removal
+            currentPropIndex -= 1
+        }
+        else Log.d(TAG, "removeCurrentProp undefined...")
+    }
+    // discard props from database for stage model
+    fun deletePropModelDatabase(propModel: PropModel) {
+        Log.d(TAG, "deletePropModelDatabase ")
+        uiScope.launch {
+            Log.d(TAG,"deletePropModelDatabase " + formatPropModel(propModel,false))
+            deleteProp(propModel)
+        }
+    }
+    // discard props from database for stage model
+    fun deletePropModelDatabaseForStage() {
         Log.d(TAG, "deleteIdFromStageModelDatabase ")
         uiScope.launch {
             stageModel?.let {

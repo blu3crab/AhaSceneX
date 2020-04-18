@@ -71,16 +71,17 @@ class CraftTouch {
     }
 
     var sceneScalePivot = ScalePivot(MIN_SCALE_FACTOR, 0.0F, 0.0F)
+    var propScalePivot = ScalePivot(MIN_SCALE_FACTOR, 0.0F, 0.0F)
 
     ///////////////////////////////////////////////////////////////////////////
     init {
     }
 
-    fun setSceneScalePivot(stageModel: StageModel) {
-        sceneScalePivot.scale = stageModel.sceneScale
-        sceneScalePivot.x = stageModel.sceneX
-        sceneScalePivot.y = stageModel.sceneY
-    }
+//    fun setSceneScalePivot(stageModel: StageModel) {
+//        sceneScalePivot.scale = stageModel.sceneScale
+//        sceneScalePivot.x = stageModel.sceneX
+//        sceneScalePivot.y = stageModel.sceneY
+//    }
     ///////////////////////////////////////////////////////////////////////////
     // touch handler
     fun onTouch(motionView: View, motionEvent: MotionEvent) {
@@ -174,6 +175,7 @@ class CraftTouch {
                     motionView.scaleY = scaleCurr
                     // if scene is focus, retain scene scale
                     if (sceneMotion) sceneScalePivot.scale = scaleCurr
+                    else propScalePivot.scale = scaleCurr
 
                     // reset viewport dims & visible rect for updated scale
                     viewportRectf = getVRect(motionView)
@@ -283,6 +285,9 @@ class CraftTouch {
                         Log.d(TAG,"MotionEvent pre-pan prop X ${motionView.x}, Y ${motionView.y}, delta x,y $deltaX, $deltaY")
                         motionView.x += deltaX
                         motionView.y += deltaY
+                        // if prop is focus, retain pivot X/Y
+                        sceneScalePivot.x = motionView.x
+                        sceneScalePivot.y = motionView.y
                         Log.d(TAG,"MotionEvent pan prop X ${motionView.x}, Y ${motionView.y}")
                     }
                     // if UP, complete single touch

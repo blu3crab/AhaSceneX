@@ -99,8 +99,8 @@ class CraftFragment : Fragment() {
         }
         // button_discard_stage removes the current stage model from the database
         viewCraft.findViewById<Button>(R.id.button_discard_stage).setOnClickListener {
-            // discard stage model
-            craftViewModel.deleteStageIdFromPropModelDatabase()
+            // discard props for stage model
+            craftViewModel.deletePropModelDatabaseForStage()
             // discard stage model
             craftViewModel.deleteIdFromStageModelDatabase()
             // navigate back to stage frag
@@ -110,17 +110,27 @@ class CraftFragment : Fragment() {
         viewCraft.findViewById<ImageView>(R.id.imageview_scene).setOnTouchListener {
                 motionView: View, motionEvent: MotionEvent ->
             craftViewModel.craftTouch.onTouch(motionView, motionEvent)
-            // TODO: capture results of scene touch motion events
+            // capture results of scene touch motion events
             craftViewModel.updateStageModelSceneTouch()
             true    // pass touch on
         }
-        val fabCraft = viewCraft.findViewById<FloatingActionButton>(R.id.fab_craft)
-        fabCraft.setOnClickListener { view ->
-            //fab_craft.setOnClickListener { view ->
-            Snackbar.make(view, "Craft adds a prop!", Snackbar.LENGTH_LONG)
+        val fabCraftAdd = viewCraft.findViewById<FloatingActionButton>(R.id.fab_craft_add)
+        fabCraftAdd.setOnClickListener { view ->
+            Snackbar.make(view, "Craft adds a prop...", Snackbar.LENGTH_SHORT)
                 .setAction("Action", null).show()
-            val thisContext = context
             craftViewModel.addPropView(viewCraft, true)
+        }
+        val fabCraftRemove = viewCraft.findViewById<FloatingActionButton>(R.id.fab_craft_add)
+        fabCraftRemove.setOnClickListener { view ->
+            if (craftViewModel.currentPropIndex > -1) {
+                Snackbar.make(view, "Craft removes a prop...", Snackbar.LENGTH_SHORT)
+                    .setAction("Action", null).show()
+                craftViewModel.removeCurrentProp()
+            }
+            else {
+                Snackbar.make(view, "Craft finds no props to remove...", Snackbar.LENGTH_SHORT)
+                    .setAction("Action", null).show()
+            }
         }
         // get prop list
         craftViewModel.getPropList(viewCraft)
