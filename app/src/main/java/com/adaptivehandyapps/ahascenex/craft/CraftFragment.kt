@@ -6,6 +6,7 @@
 package com.adaptivehandyapps.ahascenex.craft
 
 import android.annotation.SuppressLint
+import android.app.AlertDialog
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -73,7 +74,7 @@ class CraftFragment : Fragment() {
         //stageModel.type = args.stageModelType
         //stageModel.sceneSrcUrl = args.stageModelSceneSrcUrl
 
-        Toast.makeText(context, "stageModel id#  ${stageModel.nickname} = ${stageModel.label}", Toast.LENGTH_LONG).show()
+        Toast.makeText(context, "stageModel id#  ${stageModel.nickname} = ${stageModel.label}", Toast.LENGTH_SHORT).show()
         //Log.d(TAG, "stageModel id# " + stageModel.nickname + " = " + stageModel.label + ", type " + stageModel.type + ", uri " + stageModel.sceneSrcUrl)
         Log.d(TAG, "onCreateView SafeArgs-> " + formatStageModel(stageModel))
 
@@ -118,18 +119,42 @@ class CraftFragment : Fragment() {
         fabCraftAdd.setOnClickListener { view ->
             Snackbar.make(view, "Craft adds a prop...", Snackbar.LENGTH_SHORT)
                 .setAction("Action", null).show()
-            craftViewModel.addPropView(viewCraft, true)
+            craftViewModel.addPropView(viewCraft, null)
         }
-        val fabCraftRemove = viewCraft.findViewById<FloatingActionButton>(R.id.fab_craft_add)
+        val fabCraftRemove = viewCraft.findViewById<FloatingActionButton>(R.id.fab_craft_remove)
         fabCraftRemove.setOnClickListener { view ->
+            // if current prop is defined
             if (craftViewModel.currentPropIndex > -1) {
+                // remove current prop
                 Snackbar.make(view, "Craft removes a prop...", Snackbar.LENGTH_SHORT)
                     .setAction("Action", null).show()
-                craftViewModel.removeCurrentProp()
+                craftViewModel.removeCurrentProp(viewCraft)
+//                // TODO: redraw scene
+////                viewCraft.invalidate()
+//                // get prop list
+//                craftViewModel.getPropList(viewCraft)
+//                // show scene
+//                craftViewModel.showScene(viewCraft)
+//                viewCraft.invalidate()
             }
             else {
                 Snackbar.make(view, "Craft finds no props to remove...", Snackbar.LENGTH_SHORT)
                     .setAction("Action", null).show()
+                // add alert dialog to confirm deleting all props
+                val alertBuilder = AlertDialog.Builder(context)
+                alertBuilder.setTitle("Confirm Remove All Props")
+                alertBuilder.setMessage("Remove All Props in All Stages?")
+                alertBuilder.setPositiveButton("YES") { dialog, which ->
+                    // YES - remove all props
+                    Toast.makeText(context, "YES - Removing all props...", Toast.LENGTH_SHORT).show()
+                    craftViewModel.deletePropDatabase()
+                }
+                alertBuilder.setNegativeButton("Cancel") { dialog, which ->
+                    // cancel - wrap
+                    Toast.makeText(context, "CANCEL - NOT Removing all props...", Toast.LENGTH_SHORT).show()
+                }
+                val alertDialog: AlertDialog = alertBuilder.create()
+                alertDialog.show()
             }
         }
         // get prop list

@@ -50,7 +50,7 @@ class CraftViewModel (val stageDatabase: StageDatabaseDao,
     // touch handler for scene zoom & pan
     var craftTouch: CraftTouch = CraftTouch()
 
-    // prop list is all props for all stages
+    // prop list is all props for current stage
     private var _propList = MutableLiveData<MutableList<PropModel>>()
     val propList: LiveData<MutableList<PropModel>>
         get() = _propList
@@ -74,29 +74,7 @@ class CraftViewModel (val stageDatabase: StageDatabaseDao,
 
     ///////////////////////////////////////////////////////////////////////////
     init {
-    }
-    ///////////////////////////////////////////////////////////////////////////
-    // PROP database
-    fun getPropList(viewCraft: View) {
-        uiScope.launch {
-//            propModelList = getPropListFromDatabase()
-//            Log.d(TAG, "getPropList size = " + propModelList.size)
-            _propList.value = getPropListFromDatabase()
-            Log.d(TAG, "getPropList size = " + _propList.value!!.size)
-            currentPropIndex =  _propList.value!!.size - 1
-            Log.d(TAG, "getPropList current prop = " + formatPropModel(_propList.value!!.get(currentPropIndex)))
-            showScene(viewCraft)
-        }
-    }
-
-    private suspend fun getPropListFromDatabase(): MutableList<PropModel> {
-        return withContext(Dispatchers.IO) {
-            var list: MutableList<PropModel> = propDatabase.getAll()
-            if (list == null){
-                list = mutableListOf<PropModel>()
-            }
-            list
-        }
+        _propList.value = mutableListOf<PropModel>()    // empty list
     }
     ///////////////////////////////////////////////////////////////////////////
     // frag initialization sets stage model after unbundling args
@@ -137,7 +115,6 @@ class CraftViewModel (val stageDatabase: StageDatabaseDao,
         catch (ex : Exception) {
             Log.e("BindingAdapter", "scenex Glide exception! " + ex.localizedMessage)
         }
-        //getPropList() // async process!
         Log.d(TAG, "propModelList size " + (propList.value?.size ?: "undefined"))
         // for each prop in prop list
         _propList.value?.let {
@@ -147,15 +124,50 @@ class CraftViewModel (val stageDatabase: StageDatabaseDao,
                 // if prop on this stage
                 if (propModel.stageId == stageModel.value!!.tableId) {
                     // add prop view
-                    addPropView(viewCraft, false)
+                    addPropView(viewCraft, propModel)
                     Log.d(TAG, "showScene after addPropView for " + formatPropModel(propModel, false))
                 }
             }
         }
     }
+    ///////////////////////////////////////////////////////////////////////////
+    // PROP database
+    fun getPropList(viewCraft: View) {
+        uiScope.launch {
+            // get prop list for all stages in temp list var
+//            _propList.value = getPropListFromDatabase()
+            var propListAllStages = getPropListFromDatabase()
+            Log.d(TAG, "getPropList for all stages size = " + propListAllStages.size)
+            // for each prop in list
+            for (propModel in propListAllStages) {
+                // if prop in on stage
+                if (propModel.stageId == stageModel.value?.tableId) {
+                    // add to prop list
+                    _propList.value?.add(propModel)
+                }
+            }
+            Log.d(TAG, "getPropList size = " + _propList.value!!.size)
+            currentPropIndex =  _propList.value!!.size - 1
+            if (currentPropIndex > -1) {
+                Log.d(TAG, "getPropList current prop = " + formatPropModel(_propList.value!!.get(currentPropIndex)))
+            }
+            showScene(viewCraft)
+        }
+    }
+
+    private suspend fun getPropListFromDatabase(): MutableList<PropModel> {
+        return withContext(Dispatchers.IO) {
+            var list: MutableList<PropModel> = propDatabase.getAll()
+            if (list == null){
+                list = mutableListOf<PropModel>()
+            }
+            list
+        }
+    }
     // add prop to stage view
-    fun addPropView(stageView: View, addToDB: Boolean) {
-        //fun addProp(view: View, context: android.content.Context) {
+    fun addPropView(stageView: View, propModel: PropModel?) {
+        // if loading scene, add prop to existing prop model using prop model scale/pivot
+        // else create new prop model
         val craftLayout = stageView?.findViewById<ConstraintLayout>(R.id.craft_layout)
 
         resSeedId = cycleProp(resSeedId)
@@ -172,10 +184,19 @@ class CraftViewModel (val stageDatabase: StageDatabaseDao,
 
         craftLayout.addView(propView)
 
-        propView.layoutParams.height = height/2
-        propView.layoutParams.width = width/2
-        propView.x = 520F   // TODO: center in stage dynamically
-        propView.y = 620F
+        propView.layoutParams.height = height / 2
+        propView.layoutParams.width = width / 2
+        if (propModel != null) {
+            propView.scaleX = propModel.propScale
+            propView.scaleY = propModel.propScale
+            propView.x = propModel.propX
+            propView.y = propModel.propY
+        }
+        else {
+            // prop view scale = default 1
+            propView.x = 520F   // TODO: center in stage dynamically
+            propView.y = 620F
+        }
         //propView.setBackgroundColor(Color.MAGENTA)
         propView.setImageResource(resSeedId)
 
@@ -191,13 +212,15 @@ class CraftViewModel (val stageDatabase: StageDatabaseDao,
         }
 
         // add prop to DB
-        if (addToDB) addPropModel(propView, resSeedId)
+        if (propModel == null) addPropModel(propView, resSeedId)
 
         // add to prop view to prop view list
         propViewList.add(propView)
-
-        // map prop to view setting as current prop
-        mapPropViewToPropModel(propView)
+        // set current prop to this prop
+        currentPropIndex = propViewList.size - 1
+        Log.d(TAG, "addPropView set current prop to " + currentPropIndex)
+//        // map prop to view setting as current prop
+//        mapPropViewToPropModel(propView)
     }
 
     fun cycleProp(resIdSeed: Int): Int {
@@ -265,24 +288,38 @@ class CraftViewModel (val stageDatabase: StageDatabaseDao,
     fun updatePropModelSceneTouch(motionView: View) {
         var propScalePivot = craftTouch.propScalePivot
         var propModel = mapPropViewToPropModel(motionView)
-        propModel.propScale = propScalePivot.scale
-        propModel.propX = propScalePivot.x
-        propModel.propY = propScalePivot.y
-        updatePropModelDatabase(propModel)
-        Log.d(TAG, "updatePropModelSceneTouch-> " + formatPropModel(propModel))
+        propModel?.let {
+            propModel.propScale = propScalePivot.scale
+            propModel.propX = propScalePivot.x
+            propModel.propY = propScalePivot.y
+            // update local list
+            var i = _propList.value!!.indexOf(propModel)
+            _propList.value!![i] = propModel
+            updatePropModelDatabase(propModel)
+            Log.d(TAG, "updatePropModelSceneTouch-> " + formatPropModel(propModel))
+        }
     }
     // map prop view to prop model
-    fun mapPropViewToPropModel(motionView: View): PropModel {
+    fun mapPropViewToPropModel(motionView: View): PropModel? {
         var i = 0
+        // for each prop view
         for (propView in propViewList) {
+            // if view matches incoming view
             if (propView == motionView) {
                 Log.d(TAG, "mapPropViewToPropModel propView found at position " + i)
-                currentPropIndex = i
-                return propList.value!!.get(i)
+                _propList.value?.let {
+                    if (_propList.value!!.size > i) {
+                        currentPropIndex = i
+                        return propList.value!!.get(i)
+                    }
+                }
             }
             i += 1
         }
-        return propList.value!!.get(i)
+        // view not found in prop view list or prop not found in prop list
+        currentPropIndex = -1
+        Log.d(TAG, "mapPropViewToPropModel propView NOT found!")
+        return null
     }
     // update to prop model database
     fun updatePropModelDatabase(propModel: PropModel) {
@@ -300,12 +337,16 @@ class CraftViewModel (val stageDatabase: StageDatabaseDao,
         }
     }
     ///////////////////////////////////////////////////////////////////////////
-    // remove current prop & redraw
-    fun removeCurrentProp() {
+    // remove current prop
+    fun removeCurrentProp(viewCraft: View) {
         if (currentPropIndex > -1) {
             var propModel = _propList.value!!.get(currentPropIndex)
             // remove prop in DB
             deletePropModelDatabase(propModel)
+
+            // clear prop view
+            var propView = propViewList.get(currentPropIndex)
+            propView.setImageDrawable(null)
             // remove prop in view list
             propViewList.removeAt(currentPropIndex)
 
@@ -314,6 +355,9 @@ class CraftViewModel (val stageDatabase: StageDatabaseDao,
 
             // indicate removal
             currentPropIndex -= 1
+
+            // TODO: redraw scene
+            showScene(viewCraft)
         }
         else Log.d(TAG, "removeCurrentProp undefined...")
     }
@@ -345,8 +389,23 @@ class CraftViewModel (val stageDatabase: StageDatabaseDao,
             propDatabase.deletePropModel(propModel.tableId)
         }
     }
+    // discard all props from database
+    fun deletePropDatabase() {
+        Log.d(TAG, "deletePropDatabase ")
+        uiScope.launch {
+            Log.d(TAG,"deletePropDatabase...")
+            clearPropDatabase()
+        }
+    }
+    private suspend fun clearPropDatabase() {
+        withContext(Dispatchers.IO) {
+            Log.d(TAG, "clearAllProp...")
+            propDatabase.clear()
+        }
+    }
 
     ///////////////////////////////////////////////////////////////////////////
+    // STAGE coroutines
     fun saveStageModel(view: View) {
         // save label
         val editText = view?.findViewById<EditText>(R.id.edittext_scene_label)

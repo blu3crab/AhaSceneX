@@ -286,8 +286,8 @@ class CraftTouch {
                         motionView.x += deltaX
                         motionView.y += deltaY
                         // if prop is focus, retain pivot X/Y
-                        sceneScalePivot.x = motionView.x
-                        sceneScalePivot.y = motionView.y
+                        propScalePivot.x = motionView.x
+                        propScalePivot.y = motionView.y
                         Log.d(TAG,"MotionEvent pan prop X ${motionView.x}, Y ${motionView.y}")
                     }
                     // if UP, complete single touch
