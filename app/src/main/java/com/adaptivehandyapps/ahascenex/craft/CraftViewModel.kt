@@ -204,7 +204,6 @@ class CraftViewModel (val stageDatabase: StageDatabaseDao,
         propView.setOnTouchListener {
                 motionView: View, motionEvent: MotionEvent ->
             craftTouch.onTouch(motionView, motionEvent)
-            // TODO: capture results of scene touch motion events
             // capture results of prop touch motion events
             updatePropModelSceneTouch(motionView)
 
@@ -340,6 +339,7 @@ class CraftViewModel (val stageDatabase: StageDatabaseDao,
     // remove current prop
     fun removeCurrentProp(viewCraft: View) {
         if (currentPropIndex > -1) {
+            // TODO: remove prop after multiple props!
             var propModel = _propList.value!!.get(currentPropIndex)
             // remove prop in DB
             deletePropModelDatabase(propModel)
@@ -352,11 +352,10 @@ class CraftViewModel (val stageDatabase: StageDatabaseDao,
 
             // remove prop in prop list
             _propList.value!!.removeAt(currentPropIndex)
-
             // indicate removal
             currentPropIndex -= 1
 
-            // TODO: redraw scene
+            // redraw scene
             showScene(viewCraft)
         }
         else Log.d(TAG, "removeCurrentProp undefined...")

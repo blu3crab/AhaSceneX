@@ -7,7 +7,10 @@ package com.adaptivehandyapps.ahascenex.craft
 
 import android.annotation.SuppressLint
 import android.app.AlertDialog
+import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.os.Bundle
+import android.os.Environment
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.MotionEvent
@@ -27,6 +30,8 @@ import com.adaptivehandyapps.ahascenex.model.PropDatabase
 import com.adaptivehandyapps.ahascenex.model.StageDatabase
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.Snackbar
+import java.io.File
+import java.io.FileOutputStream
 
 
 //import kotlinx.android.synthetic.main.activity_main.*
@@ -87,6 +92,20 @@ class CraftFragment : Fragment() {
         super.onViewCreated(viewCraft, savedInstanceState)
         // button_save_stage updates DB then navigates back to stage fragment
         viewCraft.findViewById<Button>(R.id.button_save_stage).setOnClickListener {
+            // TODO: save view as bitmap
+            val bitmap = getBitmapFromView(viewCraft)
+            bitmap?.let {
+//                //val stageName = craftViewModel.stageModel.value!!.nickname
+                val exportDir = "/DCIM"
+//                val stageName = "stagetest.jpg"
+                val stageName = "stagetest.png"
+                Log.d(TAG, "saveBitmap getBitmapFromView $bitmap to stageName $stageName")
+                saveBitmap(bitmap, stageName)
+//                File(exportDir, stageName).writeBitmap(bitmap, Bitmap.CompressFormat.PNG, 85)
+            }
+//            saveBitmap(bitmap, stageName)
+//            return@setOnClickListener
+//            Log.e(TAG,"save view NEVER...")
             // save stage model
             craftViewModel.saveStageModel(viewCraft)
             // navigate back to stage frag
@@ -129,13 +148,6 @@ class CraftFragment : Fragment() {
                 Snackbar.make(view, "Craft removes a prop...", Snackbar.LENGTH_SHORT)
                     .setAction("Action", null).show()
                 craftViewModel.removeCurrentProp(viewCraft)
-//                // TODO: redraw scene
-////                viewCraft.invalidate()
-//                // get prop list
-//                craftViewModel.getPropList(viewCraft)
-//                // show scene
-//                craftViewModel.showScene(viewCraft)
-//                viewCraft.invalidate()
             }
             else {
                 Snackbar.make(view, "Craft finds no props to remove...", Snackbar.LENGTH_SHORT)
@@ -159,9 +171,96 @@ class CraftFragment : Fragment() {
         }
         // get prop list
         craftViewModel.getPropList(viewCraft)
+    }
 
-//        // show scene
-//        craftViewModel.showScene(viewCraft)
+    private fun File.writeBitmap(bitmap: Bitmap, format: Bitmap.CompressFormat, quality: Int) {
+        outputStream().use { out ->
+            bitmap.compress(format, quality, out)
+            out.flush()
+        }
+    }
+    private fun saveBitmap(imageToSave: Bitmap?, fileName: String) {
+
+        val dirName = "/DCIM"
+        imageToSave?.let {
+            val file_path = Environment.getExternalStorageDirectory().absolutePath + dirName
+            val dir = File(file_path)
+            if (!dir.exists()) dir.mkdirs()
+            val file = File(dir, fileName)
+            val fOut = FileOutputStream(file)
+
+            imageToSave.compress(Bitmap.CompressFormat.PNG, 100, fOut)
+            fOut.flush()
+            fOut.close()
+//            val dirPath = File(Environment.getExternalStorageDirectory().toString() + dirName)
+//            Log.d(TAG, "saveBitmap path $dirPath")
+//
+//            if (!dirPath.exists()) {
+//                val directory = File(dirName)
+//                directory.mkdirs()
+//                Log.d(TAG, "saveBitmap mkdir $dirPath")
+//            }
+//
+//            val file = File(dirName, fileName)
+//            if (file.exists()) {
+//                file.delete()
+//                Log.d(TAG, "saveBitmap delete $dirPath")
+//            }
+//            try {
+//                val out = FileOutputStream(file)
+//                imageToSave.compress(Bitmap.CompressFormat.JPEG, 100, out)
+//                out.flush()
+//                out.close()
+//                Log.d(TAG, "saveBitmap save flush $dirPath")
+//
+//            } catch (e: Exception) {
+//                e.printStackTrace()
+//            }
+        }
+    }
+    private fun getBitmapFromView(view: View): Bitmap? {
+        var width = view.width
+        var height = view.height
+        Log.d(TAG, "getBitmapFromView view w-h + $width - $height")
+        var lwidth = view.getLayoutParams().width
+        var lheight = view.getLayoutParams().height
+        Log.d(TAG, "getBitmapFromView layout w-h + $lwidth - $lheight")
+
+        var b = Bitmap.createBitmap(view.width, view.height, Bitmap.Config.ARGB_8888)
+        val c = Canvas(b)
+        view.layout(view.left, view.top, view.right, view.bottom)
+        view.draw(c)
+        return b
+//        val width = view.width
+//        val height = view.height
+//        val measuredWidth = View.MeasureSpec.makeMeasureSpec(
+//            width,
+//            View.MeasureSpec.EXACTLY
+//        )
+//        val measuredHeight = View.MeasureSpec.makeMeasureSpec(
+//            height,
+//            View.MeasureSpec.EXACTLY
+//        )
+//        //Cause the view to re-layout
+//        view.measure(measuredWidth, measuredHeight)
+//        view.layout(0, 0, view.measuredWidth, view.measuredHeight)
+//
+//        val returnedBitmap =
+//            Bitmap.createBitmap(view.width, view.height, Bitmap.Config.ARGB_8888)
+//        val canvasTest = Canvas(returnedBitmap)
+//        canvasTest.drawColor(Color.BLUE)
+//        view.draw(canvasTest)
+//        view.invalidate()
+//        return returnedBitmap
+//
+//        val canvas = Canvas(returnedBitmap)
+////        canvas.drawColor(Color.BLUE)
+////        view.invalidate()
+////        return returnedBitmap
+//        val bgDrawable = view.background
+//        if (bgDrawable != null) bgDrawable.draw(canvas) else canvas.drawColor(Color.WHITE)
+//        view.draw(canvas)
+//        return returnedBitmap
     }
     ///////////////////////////////////////////////////////////////////////////
     override fun onStart() {
