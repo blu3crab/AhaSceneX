@@ -77,6 +77,13 @@ class StageViewModel ( val database: StageDatabaseDao,
         uiScope.launch {
             _stageList.value = getStageListFromDatabase()
             Log.d(TAG, "initializeStageList size = " + _stageList.value?.size)
+            _stageList.value?.size?.let {
+                if (_stageList.value!!.size > 0) {
+                    val stageModel = _stageList.value!!.get(_stageList.value!!.size.minus(1))
+                    stageModelNickname = stageModel.nickname.toInt() + 1
+                    Log.d(TAG, "initializeStageList stageModelNickname = $stageModelNickname")
+                }
+            }
         }
     }
 

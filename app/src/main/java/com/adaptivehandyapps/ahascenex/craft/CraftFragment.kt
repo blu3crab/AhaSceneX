@@ -32,6 +32,8 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.Snackbar
 import java.io.File
 import java.io.FileOutputStream
+import java.text.SimpleDateFormat
+import java.util.*
 
 
 //import kotlinx.android.synthetic.main.activity_main.*
@@ -79,7 +81,7 @@ class CraftFragment : Fragment() {
         //stageModel.type = args.stageModelType
         //stageModel.sceneSrcUrl = args.stageModelSceneSrcUrl
 
-        Toast.makeText(context, "stageModel id#  ${stageModel.nickname} = ${stageModel.label}", Toast.LENGTH_SHORT).show()
+        //Toast.makeText(context, "stageModel id#  ${stageModel.nickname} = ${stageModel.label}", Toast.LENGTH_SHORT).show()
         //Log.d(TAG, "stageModel id# " + stageModel.nickname + " = " + stageModel.label + ", type " + stageModel.type + ", uri " + stageModel.sceneSrcUrl)
         Log.d(TAG, "onCreateView SafeArgs-> " + formatStageModel(stageModel))
 
@@ -92,20 +94,16 @@ class CraftFragment : Fragment() {
         super.onViewCreated(viewCraft, savedInstanceState)
         // button_save_stage updates DB then navigates back to stage fragment
         viewCraft.findViewById<Button>(R.id.button_save_stage).setOnClickListener {
-            // TODO: save view as bitmap
+            // save view as bitmap
             val bitmap = getBitmapFromView(viewCraft)
             bitmap?.let {
-//                //val stageName = craftViewModel.stageModel.value!!.nickname
-                val exportDir = "/DCIM"
-//                val stageName = "stagetest.jpg"
-                val stageName = "stagetest.png"
+                // create filename concatinating stage, nickname, datatime, ext
+                val sdf = SimpleDateFormat("yyyyMMdd_HHmm", Locale.getDefault())
+                val currentDateTime: String = sdf.format(Date())
+                val stageName = "stage_" + craftViewModel.stageModel.value!!.tableId + "_" + currentDateTime + ".png"
                 Log.d(TAG, "saveBitmap getBitmapFromView $bitmap to stageName $stageName")
-                saveBitmap(bitmap, stageName)
-//                File(exportDir, stageName).writeBitmap(bitmap, Bitmap.CompressFormat.PNG, 85)
+                saveBitmap(bitmap, stageName, Bitmap.CompressFormat.PNG, 100)
             }
-//            saveBitmap(bitmap, stageName)
-//            return@setOnClickListener
-//            Log.e(TAG,"save view NEVER...")
             // save stage model
             craftViewModel.saveStageModel(viewCraft)
             // navigate back to stage frag
@@ -173,49 +171,18 @@ class CraftFragment : Fragment() {
         craftViewModel.getPropList(viewCraft)
     }
 
-    private fun File.writeBitmap(bitmap: Bitmap, format: Bitmap.CompressFormat, quality: Int) {
-        outputStream().use { out ->
-            bitmap.compress(format, quality, out)
-            out.flush()
-        }
-    }
-    private fun saveBitmap(imageToSave: Bitmap?, fileName: String) {
-
-        val dirName = "/DCIM"
-        imageToSave?.let {
-            val file_path = Environment.getExternalStorageDirectory().absolutePath + dirName
-            val dir = File(file_path)
+    private fun saveBitmap(bitmap: Bitmap, fileName: String, format: Bitmap.CompressFormat, quality: Int) {
+        val dirName = "/DCIM/StageCraft"
+        bitmap?.let {
+            val filePath = Environment.getExternalStorageDirectory().absolutePath + dirName
+            val dir = File(filePath)
             if (!dir.exists()) dir.mkdirs()
             val file = File(dir, fileName)
             val fOut = FileOutputStream(file)
 
-            imageToSave.compress(Bitmap.CompressFormat.PNG, 100, fOut)
+            bitmap.compress(format, quality, fOut)
             fOut.flush()
             fOut.close()
-//            val dirPath = File(Environment.getExternalStorageDirectory().toString() + dirName)
-//            Log.d(TAG, "saveBitmap path $dirPath")
-//
-//            if (!dirPath.exists()) {
-//                val directory = File(dirName)
-//                directory.mkdirs()
-//                Log.d(TAG, "saveBitmap mkdir $dirPath")
-//            }
-//
-//            val file = File(dirName, fileName)
-//            if (file.exists()) {
-//                file.delete()
-//                Log.d(TAG, "saveBitmap delete $dirPath")
-//            }
-//            try {
-//                val out = FileOutputStream(file)
-//                imageToSave.compress(Bitmap.CompressFormat.JPEG, 100, out)
-//                out.flush()
-//                out.close()
-//                Log.d(TAG, "saveBitmap save flush $dirPath")
-//
-//            } catch (e: Exception) {
-//                e.printStackTrace()
-//            }
         }
     }
     private fun getBitmapFromView(view: View): Bitmap? {
