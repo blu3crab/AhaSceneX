@@ -30,7 +30,7 @@ class StageViewModel ( val database: StageDatabaseDao,
     private var viewModelJob = Job()
     private val uiScope = CoroutineScope(Dispatchers.Main + viewModelJob)
 
-    private var activeStageModel = MutableLiveData<StageModel?>()
+    var activeStageModel = MutableLiveData<StageModel?>()
     // model
     private var stageModelNickname = 999
 
@@ -79,6 +79,7 @@ class StageViewModel ( val database: StageDatabaseDao,
             Log.d(TAG, "initializeStageList size = " + _stageList.value?.size)
             _stageList.value?.size?.let {
                 if (_stageList.value!!.size > 0) {
+                    // get the nickname (one up number) of the last stage to bump when new stage is added
                     val stageModel = _stageList.value!!.get(_stageList.value!!.size.minus(1))
                     stageModelNickname = stageModel.nickname.toInt() + 1
                     Log.d(TAG, "initializeStageList stageModelNickname = $stageModelNickname")
@@ -99,6 +100,7 @@ class StageViewModel ( val database: StageDatabaseDao,
     ///////////////////////////////////////////////////////////////////////////
     // coroutines: stage model
     private fun initializeStageModel() {
+        // set the last stage model as the active stage
         uiScope.launch {
             activeStageModel.value = getStageModelFromDatabase()
             Log.d(TAG, "initializeStageModel " + formatStageModel(activeStageModel.value, true))

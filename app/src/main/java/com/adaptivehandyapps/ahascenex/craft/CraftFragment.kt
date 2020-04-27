@@ -111,12 +111,14 @@ class CraftFragment : Fragment() {
         }
         // button_undo_stage restores stage model to previous state
         viewCraft.findViewById<Button>(R.id.button_undo_stage).setOnClickListener {
+            // TODO: save proplist check point
             // undo stage model
             craftViewModel.undoStageModel()
             craftViewModel.showScene(viewCraft)
         }
         // button_discard_stage removes the current stage model from the database
         viewCraft.findViewById<Button>(R.id.button_discard_stage).setOnClickListener {
+            // TODO: frag plus-minus handler
             // discard props for stage model
             craftViewModel.deletePropModelDatabaseForStage()
             // discard stage model

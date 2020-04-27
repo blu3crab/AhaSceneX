@@ -5,21 +5,17 @@
 //
 package com.adaptivehandyapps.ahascenex.stage
 
-import android.Manifest
 import android.app.Activity
+import android.app.AlertDialog
 import android.app.Application
 import android.content.Intent
-import android.content.pm.PackageManager
-import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
 import android.widget.Toast
-import androidx.core.content.ContextCompat.checkSelfPermission
 //import androidx.core.content.PermissionChecker.checkSelfPermission
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.ViewModelProvider
@@ -29,6 +25,8 @@ import com.adaptivehandyapps.ahascenex.databinding.FragmentStageBinding
 import com.adaptivehandyapps.ahascenex.model.StageDatabase
 import com.adaptivehandyapps.ahascenex.model.StageModel
 import com.adaptivehandyapps.ahascenex.model.StageType
+import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.google.android.material.snackbar.Snackbar
 
 /**
  * [Fragment] subclass as the default destination in the navigation.
@@ -110,50 +108,94 @@ class StageFragment : Fragment() {
         return binding.root
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
+    override fun onViewCreated(viewStage: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(viewStage, savedInstanceState)
 
         savedInstanceState?.let {
             Log.d(TAG, "savedInstanceState not NULL...")
         }
-        // GALLERY launches photo gallery
-        view.findViewById<Button>(R.id.button_gallery).setOnClickListener {
-            Log.d(TAG, "button_gallery setOnClickListener...")
-//            // check for permissions
-//            checkPermissionForImage()
+//        // GALLERY launches photo gallery
+//        viewStage.findViewById<Button>(R.id.button_gallery).setOnClickListener {
+//            Log.d(TAG, "button_gallery setOnClickListener...")
+////            // check for permissions
+////            checkPermissionForImage()
+//            // launch Gallery intent to select photo
+//            pickImageFromGallery()
+//        }
+//        // CLEAR clears DB
+//        viewStage.findViewById<Button>(R.id.button_clear).setOnClickListener {
+//            Snackbar.make(viewStage, "Remove all stages!", Snackbar.LENGTH_SHORT)
+//                .setAction("Action", null).show()
+//            Log.d(TAG, "button_clear -> Remove all stages!")
+//            stageViewModel.clearStageList()
+//        }
+//        // CRAFT launches CraftFragment with empty StageModel
+//        viewStage.findViewById<Button>(R.id.button_craft).setOnClickListener {
+//            val testInt = 256
+//            val testString = "nada"
+//            val stageModel: StageModel = StageModel()
+//            // extract stagemodel element by element
+//            //val stageModel = stageViewModel.stageList.value!!.get(0)
+////            var stageModelId = "nada"
+////            var stageModelLabel = "nada"
+////            var stageModelType = "nada"
+////            var stageModelSceneSrcUrl = "nada"
+////            stageModel?.let {
+////                stageModelId = stageModel.id
+////                stageModelLabel = stageModel.label
+////                stageModelType = stageModel.type
+////                stageModelSceneSrcUrl = stageModel.sceneSrcUrl
+////            }
+//            viewStage!!.findNavController()
+//                .navigate(
+//                    StageFragmentDirections
+//                        .actionStageFragmentToCraftFragment(stageModel)
+//                )
+////                .actionStageFragmentToCraftFragment(testInt, testString, stageModel)
+////                            stageModelId, stageModelLabel, stageModelType, stageModelSceneSrcUrl))
+////                        .actionStageFragmentToMakeFragment(testInt, testString))
+//        }
+        // add FAB launches gallery selection
+        val fabStageAdd = viewStage.findViewById<FloatingActionButton>(R.id.fab_stage_add)
+        fabStageAdd.setOnClickListener { view ->
+            Snackbar.make(view, "Add a stage...", Snackbar.LENGTH_SHORT)
+                .setAction("Action", null).show()
             // launch Gallery intent to select photo
             pickImageFromGallery()
         }
-        // CLEAR clears DB
-        view.findViewById<Button>(R.id.button_clear).setOnClickListener {
-            Log.d(TAG, "button_clear setOnClickListener...")
-            stageViewModel.clearStageList()
-        }
-        // CRAFT launches CraftFragment with empty StageModel
-        view.findViewById<Button>(R.id.button_craft).setOnClickListener {
-            val testInt = 256
-            val testString = "nada"
-            val stageModel: StageModel = StageModel()
-            // extract stagemodel element by element
-            //val stageModel = stageViewModel.stageList.value!!.get(0)
-//            var stageModelId = "nada"
-//            var stageModelLabel = "nada"
-//            var stageModelType = "nada"
-//            var stageModelSceneSrcUrl = "nada"
-//            stageModel?.let {
-//                stageModelId = stageModel.id
-//                stageModelLabel = stageModel.label
-//                stageModelType = stageModel.type
-//                stageModelSceneSrcUrl = stageModel.sceneSrcUrl
-//            }
-            view!!.findNavController()
-                .navigate(
-                    StageFragmentDirections
-                        .actionStageFragmentToCraftFragment(stageModel)
-                )
-//                .actionStageFragmentToCraftFragment(testInt, testString, stageModel)
-//                            stageModelId, stageModelLabel, stageModelType, stageModelSceneSrcUrl))
-//                        .actionStageFragmentToMakeFragment(testInt, testString))
+        // remove FAB removes the recent selection from the stage grid
+        val fabStageRemove = viewStage.findViewById<FloatingActionButton>(R.id.fab_stage_remove)
+        fabStageRemove.setOnClickListener { view ->
+            // if at least 1 stage exists
+            if (stageViewModel.stageList != null && stageViewModel.stageList.value != null && stageViewModel.stageList.value!!.size > 0) {
+                // remove current stage
+                Snackbar.make(view, "Remove a stage...", Snackbar.LENGTH_SHORT)
+                    .setAction("Action", null).show()
+                // TODO: remove current stage & associated props
+//                stageViewModel.removeCurrentStage(viewCraft)
+            }
+            else {
+                Snackbar.make(view, "StageGrid finds no stages to remove...", Snackbar.LENGTH_SHORT)
+                    .setAction("Action", null).show()
+                // add alert dialog to confirm deleting all props
+                val alertBuilder = AlertDialog.Builder(context)
+                alertBuilder.setTitle("Confirm Remove Entire DB")
+                alertBuilder.setMessage("Remove All Props and All Stages?")
+                alertBuilder.setPositiveButton("YES") { dialog, which ->
+                    // YES - remove all props
+                    Toast.makeText(context, "YES - Removing all stages/props...", Toast.LENGTH_SHORT).show()
+//                    craftViewModel.deletePropDatabase()
+                    // TODO: clear prop DB
+                    // clear stage DB
+                    stageViewModel.clearStageList()
+                }
+                alertBuilder.setNegativeButton("Cancel") { dialog, which ->
+                    // cancel - wrap
+                    Toast.makeText(context, "CANCEL - NOT Removing all stages/props...", Toast.LENGTH_SHORT).show()
+                }
+                val alertDialog: AlertDialog = alertBuilder.create()
+                alertDialog.show()
+            }
         }
 
     }
