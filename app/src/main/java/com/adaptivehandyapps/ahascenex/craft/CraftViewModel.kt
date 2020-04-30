@@ -45,7 +45,7 @@ class CraftViewModel (val stageDatabase: StageDatabaseDao,
     val stageModel: LiveData<StageModel>
         get() = _stageModel
 
-    private var stageModelCheckPoint: StageModel = StageModel()
+//    private var stageModelCheckPoint: StageModel = StageModel()
 
     // touch handler for scene zoom & pan
     var craftTouch: CraftTouch = CraftTouch()
@@ -54,12 +54,14 @@ class CraftViewModel (val stageDatabase: StageDatabaseDao,
     private var _propList = MutableLiveData<MutableList<PropModel>>()
     val propList: LiveData<MutableList<PropModel>>
         get() = _propList
+    // propListAllStages is all props for all stages
+    private var propListAllStages = mutableListOf<PropModel>()    // empty list
 
     // prop view maps to prop list via list index
     var propViewList: MutableList<ImageView> = mutableListOf<ImageView>()
 
     // current prop
-    var currentPropIndex = -1
+    var activePropListIndex = -1
 
     enum class PropNicknameEnum(val nickname: String) {
         PROP_LEYLAND_T2("prop_leyland_t2_1024"),
@@ -74,13 +76,12 @@ class CraftViewModel (val stageDatabase: StageDatabaseDao,
 
     ///////////////////////////////////////////////////////////////////////////
     init {
-        _propList.value = mutableListOf<PropModel>()    // empty list
+        emptyPropList()
+        //_propList.value = mutableListOf<PropModel>()    // empty list
     }
     ///////////////////////////////////////////////////////////////////////////
     // frag initialization sets stage model after unbundling args
     fun loadStageModel(updatedStageModel: StageModel) {
-        // retain stage model checkpoint unless stage model is undefined
-        stageModel.value?.let {stageModelCheckPoint = stageModel.value!!} ?: run {stageModelCheckPoint = updatedStageModel}
         // update stage model
         _stageModel.value = updatedStageModel
         Log.d(TAG, "loadStageModel-> " + formatStageModel(stageModel.value))
@@ -115,28 +116,48 @@ class CraftViewModel (val stageDatabase: StageDatabaseDao,
         catch (ex : Exception) {
             Log.e("BindingAdapter", "scenex Glide exception! " + ex.localizedMessage)
         }
+    }
+    // gen prop view list
+    fun createPropViewList(viewCraft: View) {
         Log.d(TAG, "propModelList size " + (propList.value?.size ?: "undefined"))
         // for each prop in prop list
         _propList.value?.let {
-            for (propModel in _propList.value!!.listIterator()) {
+            // empty prop view list in prep for re-loading as prop DB is scanned
+            emptyPropViewList()
+            for (propModel in _propList.value!!.reversed()) {
                 Log.d(TAG, "showScene for " + formatPropModel(propModel, false))
-                Log.d(TAG, "propModel.stageId == stageModel.tableId?" + propModel.stageId + "==" + stageModel.value!!.tableId)
+                Log.d(
+                    TAG,
+                    "propModel.stageId == stageModel.tableId?" + propModel.stageId + "==" + stageModel.value!!.tableId
+                )
                 // if prop on this stage
                 if (propModel.stageId == stageModel.value!!.tableId) {
                     // add prop view
                     addPropView(viewCraft, propModel)
-                    Log.d(TAG, "showScene after addPropView for " + formatPropModel(propModel, false))
+                    Log.d(
+                        TAG,
+                        "showScene after addPropView for " + formatPropModel(propModel, false)
+                    )
                 }
             }
         }
     }
+    // clear stagelist
+    private fun emptyPropViewList() {
+        Log.d(TAG, "emptyPropViewList...")
+        propViewList = ArrayList()
+    }
+    private fun emptyPropList() {
+        Log.d(TAG, "emptyPropList...")
+        _propList.value = mutableListOf<PropModel>()    // empty list
+    }
+
     ///////////////////////////////////////////////////////////////////////////
     // PROP database
     fun getPropList(viewCraft: View) {
         uiScope.launch {
             // get prop list for all stages in temp list var
-//            _propList.value = getPropListFromDatabase()
-            var propListAllStages = getPropListFromDatabase()
+            propListAllStages = getPropListFromDatabase()
             Log.d(TAG, "getPropList for all stages size = " + propListAllStages.size)
             // for each prop in list
             for (propModel in propListAllStages) {
@@ -147,11 +168,14 @@ class CraftViewModel (val stageDatabase: StageDatabaseDao,
                 }
             }
             Log.d(TAG, "getPropList size = " + _propList.value!!.size)
-            currentPropIndex = _propList.value!!.size - 1
-            if (currentPropIndex > -1) {
-                Log.d(TAG, "getPropList current prop = " + formatPropModel(_propList.value!!.get(currentPropIndex)))
+            activePropListIndex = _propList.value!!.size - 1
+            if (activePropListIndex > -1) {
+                Log.d(TAG, "getPropList current prop = " + formatPropModel(_propList.value!!.get(activePropListIndex)))
             }
+            // show scene creating prop view list
             showScene(viewCraft)
+            // create prop view list
+            createPropViewList(viewCraft)
         }
     }
 
@@ -170,7 +194,10 @@ class CraftViewModel (val stageDatabase: StageDatabaseDao,
         // else create new prop model
         val craftLayout = stageView?.findViewById<ConstraintLayout>(R.id.craft_layout)
 
-        resSeedId = cycleProp(resSeedId)
+        // if prop model defined, assign res id, else cycle to new res
+        propModel?.let {resSeedId = propModel.propResId}
+            ?: run {resSeedId = cycleProp(resSeedId)}
+
         resNickname = syncPropNickname(resSeedId)
         val dimensions = BitmapFactory.Options()
         dimensions.inJustDecodeBounds = true
@@ -216,8 +243,8 @@ class CraftViewModel (val stageDatabase: StageDatabaseDao,
         // add to prop view to prop view list
         propViewList.add(propView)
         // set current prop to this prop
-        currentPropIndex = propViewList.size - 1
-        Log.d(TAG, "addPropView set current prop to " + currentPropIndex)
+        activePropListIndex = propViewList.size - 1
+        Log.d(TAG, "addPropView set current prop to " + activePropListIndex)
 //        // map prop to view setting as current prop
 //        mapPropViewToPropModel(propView)
     }
@@ -266,6 +293,8 @@ class CraftViewModel (val stageDatabase: StageDatabaseDao,
 
         // insert prop model in DB
         insertPropModelDatabase(propModel)
+        // update prop model list
+        _propList.value!!.add(propModel)
     }
     // add to prop model database
     fun insertPropModelDatabase(propModel: PropModel) {
@@ -294,12 +323,16 @@ class CraftViewModel (val stageDatabase: StageDatabaseDao,
             // update local list
             var i = _propList.value!!.indexOf(propModel)
             _propList.value!![i] = propModel
+            // TODO: update only if touch finished
             updatePropModelDatabase(propModel)
             Log.d(TAG, "updatePropModelSceneTouch-> " + formatPropModel(propModel))
         }
     }
     // map prop view to prop model
     fun mapPropViewToPropModel(motionView: View): PropModel? {
+        if (_propList.value!!.size != propViewList.size) {
+            Log.e(TAG, "proplist size ${_propList.value!!.size} != proviewlist size ${propViewList.size}")
+        }
         var i = 0
         // for each prop view
         for (propView in propViewList) {
@@ -308,7 +341,7 @@ class CraftViewModel (val stageDatabase: StageDatabaseDao,
                 Log.d(TAG, "mapPropViewToPropModel propView found at position " + i)
                 _propList.value?.let {
                     if (_propList.value!!.size > i) {
-                        currentPropIndex = i
+                        activePropListIndex = i
                         return propList.value!!.get(i)
                     }
                 }
@@ -316,8 +349,8 @@ class CraftViewModel (val stageDatabase: StageDatabaseDao,
             i += 1
         }
         // view not found in prop view list or prop not found in prop list
-        currentPropIndex = -1
-        Log.d(TAG, "mapPropViewToPropModel propView NOT found!")
+        activePropListIndex = -1
+        Log.e(TAG, "mapPropViewToPropModel propModel NOT found!")
         return null
     }
     // update to prop model database
@@ -337,26 +370,26 @@ class CraftViewModel (val stageDatabase: StageDatabaseDao,
     }
     ///////////////////////////////////////////////////////////////////////////
     // remove current prop
-    fun removeCurrentProp(viewCraft: View) {
-        if (currentPropIndex > -1) {
+    fun removeActiveProp(viewCraft: View) {
+        if (activePropListIndex > -1) {
             // TODO: crash remove prop after multiple props!
-            var propModel = _propList.value!!.get(currentPropIndex)
+            var propModel = _propList.value!!.get(activePropListIndex)
             // remove prop in DB
             deletePropModelDatabase(propModel)
 
             // clear prop view
-            var propView = propViewList.get(currentPropIndex)
+            var propView = propViewList.get(activePropListIndex)
             propView.setImageDrawable(null)
-            // remove prop in view list
-            propViewList.removeAt(currentPropIndex)
 
+            // remove prop in view list
+            propViewList.removeAt(activePropListIndex)
             // remove prop in prop list
-            _propList.value!!.removeAt(currentPropIndex)
-            // indicate removal
-            currentPropIndex -= 1
-            Log.d(TAG, "removeCurrentProp currentPropIndex set to $currentPropIndex")
-            // redraw scene
-            showScene(viewCraft)
+            _propList.value!!.removeAt(activePropListIndex)
+            // reset active prop to end of list or -1
+            activePropListIndex -= 1
+            Log.d(TAG, "removeCurrentProp currentPropIndex set to $activePropListIndex")
+//            // redraw scene while not creating prop viewlist
+//            showScene(viewCraft)
         }
         else Log.d(TAG, "removeCurrentProp undefined...")
     }
@@ -368,20 +401,20 @@ class CraftViewModel (val stageDatabase: StageDatabaseDao,
             deleteProp(propModel)
         }
     }
-    // discard props from database for stage model
-    fun deletePropForStage() {
-        Log.d(TAG, "deleteIdFromStageModelDatabase ")
-        uiScope.launch {
-            stageModel?.let {
-                for (propModel in _propList.value!!.listIterator()) {
-                    if (propModel.stageId == stageModel.value!!.tableId) {
-                        Log.d(TAG,"deleteStageIdFromPropModelDatabase " + formatPropModel(propModel,false))
-                        deleteProp(propModel)
-                    }
-                }
-            }
-        }
-    }
+//    // discard props from database for stage model
+//    fun deletePropForStage() {
+//        Log.d(TAG, "deleteIdFromStageModelDatabase ")
+//        uiScope.launch {
+//            stageModel?.let {
+//                for (propModel in _propList.value!!.listIterator()) {
+//                    if (propModel.stageId == stageModel.value!!.tableId) {
+//                        Log.d(TAG,"deleteStageIdFromPropModelDatabase " + formatPropModel(propModel,false))
+//                        deleteProp(propModel)
+//                    }
+//                }
+//            }
+//        }
+//    }
     private suspend fun deleteProp(propModel: PropModel) {
         withContext(Dispatchers.IO) {
             Log.d(TAG, "delete " + propModel.tableId)
@@ -427,15 +460,15 @@ class CraftViewModel (val stageDatabase: StageDatabaseDao,
     }
     // update stage model label
     fun updateStageModelLabel(label: String) {
-        stageModelCheckPoint.label = stageModel.value!!.label
+//        stageModelCheckPoint.label = stageModel.value!!.label
         stageModel.value!!.label = label
     }
-    // undo stage model changes - label, props
-    fun undoStageModel() {
-        Log.d(TAG, "undoStageModel replaces current " + formatStageModel(stageModel.value, false))
-        _stageModel.value = stageModelCheckPoint
-        Log.d(TAG, "undoStageModel with checkpoint " + formatStageModel(stageModel.value, false))
-    }
+//    // undo stage model changes - label, props
+//    fun undoStageModel() {
+//        Log.d(TAG, "undoStageModel replaces current " + formatStageModel(stageModel.value, false))
+//        _stageModel.value = stageModelCheckPoint
+//        Log.d(TAG, "undoStageModel with checkpoint " + formatStageModel(stageModel.value, false))
+//    }
     ///////////////////////////////////////////////////////////////////////////
     // STAGE Database
     // update stage model database

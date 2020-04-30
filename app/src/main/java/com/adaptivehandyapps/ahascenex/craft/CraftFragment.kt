@@ -109,23 +109,6 @@ class CraftFragment : Fragment() {
             // navigate back to stage frag
             findNavController().navigate(R.id.action_CraftFragment_to_StageFragment)
         }
-        // button_undo_stage restores stage model to previous state
-        viewCraft.findViewById<Button>(R.id.button_undo_stage).setOnClickListener {
-            // TODO: save proplist check point
-            // undo stage model
-            craftViewModel.undoStageModel()
-            craftViewModel.showScene(viewCraft)
-        }
-        // button_discard_stage removes the current stage model from the database
-        viewCraft.findViewById<Button>(R.id.button_discard_stage).setOnClickListener {
-            // TODO: frag plus-minus handler
-            // discard props for stage model
-            craftViewModel.deletePropForStage()
-            // discard stage model
-            craftViewModel.deleteStageFromDatabase()
-            // navigate back to stage frag
-            findNavController().navigate(R.id.action_CraftFragment_to_StageFragment)
-        }
         // imageview_scene touch interactions
         viewCraft.findViewById<ImageView>(R.id.imageview_scene).setOnTouchListener {
                 motionView: View, motionEvent: MotionEvent ->
@@ -143,11 +126,11 @@ class CraftFragment : Fragment() {
         val fabCraftRemove = viewCraft.findViewById<FloatingActionButton>(R.id.fab_craft_remove)
         fabCraftRemove.setOnClickListener { view ->
             // if current prop is defined
-            if (craftViewModel.currentPropIndex > -1) {
+            if (craftViewModel.activePropListIndex > -1) {
                 // remove current prop
                 Snackbar.make(view, "Craft removes a prop...", Snackbar.LENGTH_SHORT)
                     .setAction("Action", null).show()
-                craftViewModel.removeCurrentProp(viewCraft)
+                craftViewModel.removeActiveProp(viewCraft)
             }
             else {
                 Snackbar.make(view, "Craft finds no props to remove...", Snackbar.LENGTH_SHORT)

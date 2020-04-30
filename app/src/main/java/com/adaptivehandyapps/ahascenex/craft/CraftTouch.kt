@@ -220,6 +220,7 @@ class CraftTouch {
                 val distY = y0Curr - y0Prev
                 Log.d(TAG, "MotionEvent dist x,y $distX, $distY, curr x,y $x0Curr, $y0Curr, prev x,y $x0Prev, $y0Prev")
                 // if distance non-zero
+                // TODO: distX != 0 || distY != 0
                 if (distX > 0 || distX < 0 || distY > 0 || distY < 0) {
                     if (sceneMotion) {
                         viewportRectf = getVRect(motionView)

@@ -177,6 +177,7 @@ class StageViewModel ( //val database: StageDatabaseDao,
             _stageList.value = getStageListFromDatabase()
             Log.d(TAG, "initializeStageList size = " + _stageList.value?.size)
             _stageList.value?.size?.let {
+                _stageList.value!!.reverse()
                 if (_stageList.value!!.size > 0) {
                     // set active stage index to last stage
                     activeStageListInx = _stageList.value!!.size.minus(1)

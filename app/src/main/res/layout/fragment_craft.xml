@@ -82,13 +82,15 @@
             android:text="@string/save_stage_button_label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            app:layout_constraintBottom_toBottomOf="@id/imageview_scene"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintRight_toLeftOf="@+id/fab_craft_add" />
+<!--
+      app:layout_constraintBottom_toBottomOf="@id/imageview_scene"
             app:layout_constraintHorizontal_bias="0.087"
             app:layout_constraintLeft_toLeftOf="@id/imageview_scene"
             app:layout_constraintRight_toRightOf="@id/imageview_scene"
             app:layout_constraintTop_toTopOf="@id/imageview_scene"
-            app:layout_constraintVertical_bias="0.048" />
-
+            app:layout_constraintVertical_bias="0.048"
         <Button
             android:id="@+id/button_undo_stage"
             android:text="@string/undo_stage_button_label"
@@ -112,7 +114,7 @@
             app:layout_constraintRight_toRightOf="@id/imageview_scene"
             app:layout_constraintTop_toTopOf="@id/imageview_scene"
             app:layout_constraintVertical_bias="0.048" />
-
+-->
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/fab_craft_add"
             android:layout_width="wrap_content"
