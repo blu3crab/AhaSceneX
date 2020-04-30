@@ -22,6 +22,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.findNavController
 import com.adaptivehandyapps.ahascenex.R
 import com.adaptivehandyapps.ahascenex.databinding.FragmentStageBinding
+import com.adaptivehandyapps.ahascenex.model.PropDatabase
 import com.adaptivehandyapps.ahascenex.model.StageDatabase
 import com.adaptivehandyapps.ahascenex.model.StageModel
 import com.adaptivehandyapps.ahascenex.model.StageType
@@ -63,10 +64,12 @@ class StageFragment : Fragment() {
         application =
             requireNotNull(this.activity).application     // application used for permissions
 
-        val dataSource = StageDatabase.getInstance(application).stageDatabaseDao
+//        val dataSource = StageDatabase.getInstance(application).stageDatabaseDao
+        val stageDataSource = StageDatabase.getInstance(application).stageDatabaseDao
+        val propDataSource = PropDatabase.getInstance(application).propDatabaseDao
 
         // reference to the ViewModel associated with this fragment
-        val viewModelFactory = StageViewModelFactory(dataSource, application)
+        val viewModelFactory = StageViewModelFactory(stageDataSource, propDataSource, application)
         stageViewModel = ViewModelProvider(this, viewModelFactory).get(StageViewModel::class.java)
 
         // To use the View Model with data binding, you have to explicitly
@@ -82,7 +85,10 @@ class StageFragment : Fragment() {
 
             // set stagemodel from listener
             val stageModel = it
-            //val stageModel = stageViewModel.stageList.value!!.get(0)
+            // retain a active stage
+            stageViewModel.setActiveStageListInx(stageModel)
+
+            // TEST fragment IPC
             // extract stagemodel element by element
 //            var stageModelId = "nada"
 //            var stageModelLabel = "nada"
@@ -114,47 +120,6 @@ class StageFragment : Fragment() {
         savedInstanceState?.let {
             Log.d(TAG, "savedInstanceState not NULL...")
         }
-//        // GALLERY launches photo gallery
-//        viewStage.findViewById<Button>(R.id.button_gallery).setOnClickListener {
-//            Log.d(TAG, "button_gallery setOnClickListener...")
-////            // check for permissions
-////            checkPermissionForImage()
-//            // launch Gallery intent to select photo
-//            pickImageFromGallery()
-//        }
-//        // CLEAR clears DB
-//        viewStage.findViewById<Button>(R.id.button_clear).setOnClickListener {
-//            Snackbar.make(viewStage, "Remove all stages!", Snackbar.LENGTH_SHORT)
-//                .setAction("Action", null).show()
-//            Log.d(TAG, "button_clear -> Remove all stages!")
-//            stageViewModel.clearStageList()
-//        }
-//        // CRAFT launches CraftFragment with empty StageModel
-//        viewStage.findViewById<Button>(R.id.button_craft).setOnClickListener {
-//            val testInt = 256
-//            val testString = "nada"
-//            val stageModel: StageModel = StageModel()
-//            // extract stagemodel element by element
-//            //val stageModel = stageViewModel.stageList.value!!.get(0)
-////            var stageModelId = "nada"
-////            var stageModelLabel = "nada"
-////            var stageModelType = "nada"
-////            var stageModelSceneSrcUrl = "nada"
-////            stageModel?.let {
-////                stageModelId = stageModel.id
-////                stageModelLabel = stageModel.label
-////                stageModelType = stageModel.type
-////                stageModelSceneSrcUrl = stageModel.sceneSrcUrl
-////            }
-//            viewStage!!.findNavController()
-//                .navigate(
-//                    StageFragmentDirections
-//                        .actionStageFragmentToCraftFragment(stageModel)
-//                )
-////                .actionStageFragmentToCraftFragment(testInt, testString, stageModel)
-////                            stageModelId, stageModelLabel, stageModelType, stageModelSceneSrcUrl))
-////                        .actionStageFragmentToMakeFragment(testInt, testString))
-//        }
         // add FAB launches gallery selection
         val fabStageAdd = viewStage.findViewById<FloatingActionButton>(R.id.fab_stage_add)
         fabStageAdd.setOnClickListener { view ->
@@ -166,15 +131,31 @@ class StageFragment : Fragment() {
         // remove FAB removes the recent selection from the stage grid
         val fabStageRemove = viewStage.findViewById<FloatingActionButton>(R.id.fab_stage_remove)
         fabStageRemove.setOnClickListener { view ->
-            // if at least 1 stage exists
-            if (stageViewModel.stageList != null && stageViewModel.stageList.value != null && stageViewModel.stageList.value!!.size > 0) {
-                // remove current stage
+            // get active stage
+            var stageModel = stageViewModel.getActiveStage()
+            // if active stage exists
+            stageModel?.let {
+                // remove active stage
                 Snackbar.make(view, "Remove a stage...", Snackbar.LENGTH_SHORT)
                     .setAction("Action", null).show()
                 // TODO: remove current stage & associated props
-//                stageViewModel.removeCurrentStage(viewCraft)
-            }
-            else {
+                // remove from DB
+                Log.d(TAG, "deletePropForStage...")
+                stageViewModel.deletePropForStage(stageModel)
+                Log.d(TAG, "deleteStageFromDatabase...")
+                stageViewModel.deleteStageFromDatabase(stageModel)
+
+                // remove from stage list
+                if (stageViewModel.removeActiveStageFromList()) {
+                    Log.d(TAG, "fabStageRemove notifyDataSetChanged...")
+                    //binding.sceneListGrid.adapter?.notifyItemChanged(0)
+                    binding.sceneListGrid.adapter?.notifyDataSetChanged()
+                    //viewStage.invalidate()
+                }
+                else Log.d(TAG, "fabStageRemove removeActiveStageFromList FAIL...")
+
+            } ?: run {
+//            else {
                 Snackbar.make(view, "StageGrid finds no stages to remove...", Snackbar.LENGTH_SHORT)
                     .setAction("Action", null).show()
                 // add alert dialog to confirm deleting all props
@@ -184,10 +165,12 @@ class StageFragment : Fragment() {
                 alertBuilder.setPositiveButton("YES") { dialog, which ->
                     // YES - remove all props
                     Toast.makeText(context, "YES - Removing all stages/props...", Toast.LENGTH_SHORT).show()
-//                    craftViewModel.deletePropDatabase()
-                    // TODO: clear prop DB
+                    // clear prop DB
+                    Log.d(TAG, "clearPropDatabase...")
+                    stageViewModel.clearPropDatabase()
                     // clear stage DB
-                    stageViewModel.clearStageList()
+                    Log.d(TAG, "clearStageDatabase...")
+                    stageViewModel.clearStageDatabase()
                 }
                 alertBuilder.setNegativeButton("Cancel") { dialog, which ->
                     // cancel - wrap

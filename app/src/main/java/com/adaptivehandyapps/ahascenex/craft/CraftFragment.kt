@@ -120,9 +120,9 @@ class CraftFragment : Fragment() {
         viewCraft.findViewById<Button>(R.id.button_discard_stage).setOnClickListener {
             // TODO: frag plus-minus handler
             // discard props for stage model
-            craftViewModel.deletePropModelDatabaseForStage()
+            craftViewModel.deletePropForStage()
             // discard stage model
-            craftViewModel.deleteIdFromStageModelDatabase()
+            craftViewModel.deleteStageFromDatabase()
             // navigate back to stage frag
             findNavController().navigate(R.id.action_CraftFragment_to_StageFragment)
         }
@@ -159,7 +159,7 @@ class CraftFragment : Fragment() {
                 alertBuilder.setPositiveButton("YES") { dialog, which ->
                     // YES - remove all props
                     Toast.makeText(context, "YES - Removing all props...", Toast.LENGTH_SHORT).show()
-                    craftViewModel.deletePropDatabase()
+                    craftViewModel.clearPropDatabase()
                 }
                 alertBuilder.setNegativeButton("Cancel") { dialog, which ->
                     // cancel - wrap

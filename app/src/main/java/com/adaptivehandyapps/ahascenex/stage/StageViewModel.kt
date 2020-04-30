@@ -11,9 +11,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.adaptivehandyapps.ahascenex.formatStageModel
-import com.adaptivehandyapps.ahascenex.model.StageDatabaseDao
-import com.adaptivehandyapps.ahascenex.model.StageModel
-import com.adaptivehandyapps.ahascenex.model.StageType
+import com.adaptivehandyapps.ahascenex.model.*
 import kotlinx.coroutines.*
 
 //enum class StageStatus { EMPTY, SCENE, LABEL, PROP, READY }
@@ -21,8 +19,10 @@ enum class StageListStatus { EMPTY, LAUNCH, LOCAL, READY }
 
 ///////////////////////////////////////////////////////////////////////////
 //class StageViewModel : ViewModel() {
-class StageViewModel ( val database: StageDatabaseDao,
-                       application: Application) : AndroidViewModel(application)
+class StageViewModel ( //val database: StageDatabaseDao,
+    val stageDatabase: StageDatabaseDao,
+    val propDatabase: PropDatabaseDao,
+    application: Application) : AndroidViewModel(application)
 {
     private val TAG = "StageViewModel"
 
@@ -30,7 +30,8 @@ class StageViewModel ( val database: StageDatabaseDao,
     private var viewModelJob = Job()
     private val uiScope = CoroutineScope(Dispatchers.Main + viewModelJob)
 
-    var activeStageModel = MutableLiveData<StageModel?>()
+//    var activeStageModel = MutableLiveData<StageModel?>()
+    var activeStageListInx: Int = -1
     // model
     private var stageModelNickname = 999
 
@@ -54,67 +55,43 @@ class StageViewModel ( val database: StageDatabaseDao,
         //setTestStageList()
         //getStageList(StageType.ALL_TYPE)
 
-        // get first stage model from DB
-        initializeStageModel()
+//        // get first stage model from DB
+//        getLastStageModel()
         // get stage list from DB
-        initializeStageList()
+        getStageList()
     }
     ///////////////////////////////////////////////////////////////////////////
-    // coroutines: stage model
-    fun clearStageList() {
-        uiScope.launch {
-            clearStageListFromDatabase()
-            Log.d(TAG, "clearStageListFromDatabase...")
+    // public helpers
+    // set active stage list index
+    fun setActiveStageListInx(stageModel: StageModel): Int {
+        // clear active stage index
+        activeStageListInx = -1
+        // find stage in stage list
+        var i = _stageList.value?.indexOf(stageModel)
+        if (i != null) {
+            activeStageListInx = i
         }
+        Log.d(TAG, "setActiveStageListInx sets active stage index = $activeStageListInx")
+        return activeStageListInx
     }
-
-    private suspend fun clearStageListFromDatabase() {
-        return withContext(Dispatchers.IO) {
-            database.clear()
+    // get active stage
+    fun getActiveStage(): StageModel? {
+        var stageModel: StageModel? = null
+        if (activeStageListInx >= 0 && _stageList.value?.size!! > activeStageListInx) {
+            stageModel = _stageList.value!!.get(activeStageListInx)
+            Log.d(TAG,"getActiveStage " + formatStageModel(stageModel,false))
         }
+        return stageModel
     }
-    private fun initializeStageList() {
-        uiScope.launch {
-            _stageList.value = getStageListFromDatabase()
-            Log.d(TAG, "initializeStageList size = " + _stageList.value?.size)
-            _stageList.value?.size?.let {
-                if (_stageList.value!!.size > 0) {
-                    // get the nickname (one up number) of the last stage to bump when new stage is added
-                    val stageModel = _stageList.value!!.get(_stageList.value!!.size.minus(1))
-                    stageModelNickname = stageModel.nickname.toInt() + 1
-                    Log.d(TAG, "initializeStageList stageModelNickname = $stageModelNickname")
-                }
-            }
+    // get active stage
+    fun removeActiveStageFromList(): Boolean {
+        if (activeStageListInx >= 0 && _stageList.value?.size!! > activeStageListInx) {
+            _stageList.value!!.removeAt(activeStageListInx)
+            Log.d(TAG,"removeActiveStageFromList at index " + activeStageListInx)
+            activeStageListInx = -1
+            return true
         }
-    }
-
-    private suspend fun getStageListFromDatabase(): MutableList<StageModel> {
-        return withContext(Dispatchers.IO) {
-            var list: MutableList<StageModel> = database.getAll()
-            if (list == null){
-                list = mutableListOf<StageModel>()
-            }
-            list
-        }
-    }
-    ///////////////////////////////////////////////////////////////////////////
-    // coroutines: stage model
-    private fun initializeStageModel() {
-        // set the last stage model as the active stage
-        uiScope.launch {
-            activeStageModel.value = getStageModelFromDatabase()
-            Log.d(TAG, "initializeStageModel " + formatStageModel(activeStageModel.value, true))
-        }
-    }
-
-    private suspend fun getStageModelFromDatabase(): StageModel? {
-        return withContext(Dispatchers.IO) {
-            var stageModel = database.getLast()
-//            if (stageModel?.endTimeMilli != stageModel?.startTimeMilli) {
-//                stageModel = null
-//            }
-            stageModel
-        }
+        return false
     }
     ///////////////////////////////////////////////////////////////////////////
     // coroutines: cancel all coroutines when the ViewModel is destroyed
@@ -123,28 +100,121 @@ class StageViewModel ( val database: StageDatabaseDao,
         viewModelJob.cancel()
     }
     ///////////////////////////////////////////////////////////////////////////
-    private fun setTestStageList() {
-        // TEST: clear initial list
-        // stage list is empty
-        //_status.value = StageListStatus.EMPTY
-        //_stageList.value = ArrayList()
-        // add test stage list entries
-        var stageModel = StageModel()
-        stageModel.nickname = stageModelNickname.toString()
-        stageModel.type = StageType.ICON_TYPE.value
-        //stageModel.sceneSrcUrl = "content://com.google.android.apps.photos.contentprovider/0/1/content%3A%2F%2Fmedia%2Fexternal%2Fimages%2Fmedia%2F7889/ORIGINAL/NONE/image%2Fjpeg/1140719721"
-        stageModel.sceneSrcUrl = "add_to_queue-24px.svg"
-        stageModel.label = "dummy test image"
-        // TEST: initialize 1 list element, replace entire list
-        //var testList = MutableList<StageModel>(1) { stageModel }
-        //_stageList.value = testList   // ok
-        // TEST: directly add test element to list
-        _stageList.value?.add(stageModel)   // ok - add empty
-        // TEST: add to list using actual setter
-        //addStageModel(stageModel)   // ok
-        //_status.value = StageListStatus.LOCAL
+    // coroutines: prop model database
+    ///////////////////////////////////////////////////////////////////////////
+    // discard all props from database
+    fun clearPropDatabase() {
+        Log.d(TAG, "deletePropDatabase ")
+        uiScope.launch {
+            Log.d(TAG,"deletePropDatabase...")
+            clearPropModelDatabase()
+        }
+    }
+    private suspend fun clearPropModelDatabase() {
+        withContext(Dispatchers.IO) {
+            Log.d(TAG, "clearAllProp...")
+            propDatabase.clear()
+        }
     }
 
+    // discard props from database for stage model
+    fun deletePropForStage(stageModel: StageModel) {
+        Log.d(TAG, "deletePropModelDatabaseForStage ")
+        uiScope.launch {
+            stageModel?.let {
+                Log.d(TAG,"deletePropModelDatabaseForStage " + formatStageModel(stageModel,true))
+                deleteStageProp(stageModel.tableId)
+            }
+        }
+    }
+    private suspend fun deleteStageProp(stageTableId: Long) {
+        withContext(Dispatchers.IO) {
+            Log.d(TAG, "deleteProp for stageId " + stageTableId)
+            propDatabase.deletePropModelByStageId(stageTableId)
+        }
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // coroutines: stage model database
+    ///////////////////////////////////////////////////////////////////////////
+    // delete stage from stage model database
+    fun deleteStageFromDatabase(stageModel: StageModel) {
+        Log.d(TAG, "removeStageFromDatabase ")
+        uiScope.launch {
+            stageModel?.let {
+                // delete stage from DB
+                Log.d(TAG, "deleteStageFromDatabase " + formatStageModel(stageModel, false))
+                delete(stageModel!!)
+            }
+        }
+    }
+    private suspend fun delete(stageModel: StageModel) {
+        withContext(Dispatchers.IO) {
+            Log.d(TAG, "delete " + stageModel.tableId)
+            stageDatabase.deleteStageModel(stageModel.tableId)
+        }
+    }
+
+    // clear all stages in database
+    fun clearStageDatabase() {
+        uiScope.launch {
+            // empty stage list
+            emptyStageList()
+            // clear DB
+            clearStageModelDatabase()
+            Log.d(TAG, "clearStageListFromDatabase...")
+        }
+    }
+    private suspend fun clearStageModelDatabase() {
+        return withContext(Dispatchers.IO) {
+            stageDatabase.clear()
+        }
+    }
+
+    // get all stages in database
+    private fun getStageList() {
+        uiScope.launch {
+            _stageList.value = getStageListFromDatabase()
+            Log.d(TAG, "initializeStageList size = " + _stageList.value?.size)
+            _stageList.value?.size?.let {
+                if (_stageList.value!!.size > 0) {
+                    // set active stage index to last stage
+                    activeStageListInx = _stageList.value!!.size.minus(1)
+                    Log.d(TAG, "initializeStageList sets active stage inx " + activeStageListInx)
+                    // get the nickname (one up number) of the last stage to bump when new stage is added
+                    val stageModel = _stageList.value!!.get(_stageList.value!!.size.minus(1))
+                    stageModelNickname = stageModel.nickname.toInt() + 1
+                    Log.d(TAG, "initializeStageList stageModelNickname = $stageModelNickname")
+                }
+            }
+        }
+    }
+    private suspend fun getStageListFromDatabase(): MutableList<StageModel> {
+        return withContext(Dispatchers.IO) {
+            var list: MutableList<StageModel> = stageDatabase.getAll()
+            if (list == null){
+                list = mutableListOf<StageModel>()
+            }
+            list
+        }
+    }
+
+//    // get last stage model
+//    private fun getLastStageModel() {
+//        // set the last stage model as the active stage
+//        uiScope.launch {
+//            var stageModel = getLastStageModelFromDatabase()
+//            Log.d(TAG, "getLastStageModel " + formatStageModel(stageModel, true))
+//        }
+//    }
+//    private suspend fun getLastStageModelFromDatabase(): StageModel? {
+//        return withContext(Dispatchers.IO) {
+//            var stageModel = stageDatabase.getLast()
+//            stageModel
+//        }
+//    }
+
+    // add stage model by adding to stage list and inserting in database
     fun addStageModel(stageModel: StageModel): Boolean {
         var inserted = false
         if (_status.value == StageListStatus.EMPTY) {
@@ -164,25 +234,28 @@ class StageViewModel ( val database: StageDatabaseDao,
             Log.d(TAG, "addStageModel ")
             uiScope.launch {
                 insert(stageModel)
-                activeStageModel.value = getStageModelFromDatabase()
-                Log.d(TAG, "addStageModel DB insert " + formatStageModel(activeStageModel.value, false))
+                Log.d(TAG, "addStageModel DB insert " + formatStageModel(stageModel, false))
+                // set active stage index to last stage
+                activeStageListInx = _stageList.value!!.size.minus(1)
+                Log.d(TAG, "addStageModel sets active stage inx " + activeStageListInx)
             }
-
         }
-        // TEST: if list not null
-        //val list = _stageList
-        //list?.let {
-        // iterate through stagelist
-        for (stageModel in _stageList.value!!.listIterator()) {
-            Log.d(TAG, formatStageModel(stageModel))    // terse mode parameter unnecessary, defaults to true
+        // log resulting stage list
+        _stageList.value?.let {
+            // iterate through stagelist
+            for (stageModel in _stageList.value!!.listIterator()) {
+                Log.d(TAG, formatStageModel(stageModel))    // terse mode parameter unnecessary, defaults to true
+            }
+            // mark list ready
+            _status.value = StageListStatus.READY
+        } ?: run {
+            _status.value = StageListStatus.EMPTY
         }
-        // mark list ready
-        _status.value = StageListStatus.READY
         return inserted
     }
     private suspend fun insert(stageModel: StageModel) {
         withContext(Dispatchers.IO) {
-            database.insert(stageModel)
+            stageDatabase.insert(stageModel)
         }
     }
 
@@ -204,15 +277,27 @@ class StageViewModel ( val database: StageDatabaseDao,
         val size = _stageList.value!!.size
         return size
     }
-//    fun toString(stageModel: StageModel?, terse: Boolean = false): String {
-//        stageModel?.let {
-//            if (terse) {
-//                return "stageModel nickname# " + stageModel.nickname + " label " + stageModel.label
-//            }
-//            return "stageModel id# " + stageModel.nickname + " = " + stageModel.label +
-//                    ", type " + stageModel.type + ", uri " + stageModel.sceneSrcUrl
-//        }
-//        return "stageModel NULL... "
-//    }
-
+    ///////////////////////////////////////////////////////////////////////////
+    // TEST experiments
+    private fun setTestStageList() {
+        // TEST: clear initial list
+        // stage list is empty
+        //_status.value = StageListStatus.EMPTY
+        //_stageList.value = ArrayList()
+        // add test stage list entries
+        var stageModel = StageModel()
+        stageModel.nickname = stageModelNickname.toString()
+        stageModel.type = StageType.ICON_TYPE.value
+        //stageModel.sceneSrcUrl = "content://com.google.android.apps.photos.contentprovider/0/1/content%3A%2F%2Fmedia%2Fexternal%2Fimages%2Fmedia%2F7889/ORIGINAL/NONE/image%2Fjpeg/1140719721"
+        stageModel.sceneSrcUrl = "add_to_queue-24px.svg"
+        stageModel.label = "dummy test image"
+        // TEST: initialize 1 list element, replace entire list
+        //var testList = MutableList<StageModel>(1) { stageModel }
+        //_stageList.value = testList   // ok
+        // TEST: directly add test element to list
+        _stageList.value?.add(stageModel)   // ok - add empty
+        // TEST: add to list using actual setter
+        //addStageModel(stageModel)   // ok
+        //_status.value = StageListStatus.LOCAL
+    }
 }

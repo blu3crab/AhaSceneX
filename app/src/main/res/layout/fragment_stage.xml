@@ -45,41 +45,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
-<!--
-        <Button
-            android:id="@+id/button_gallery"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/gallery_button_label"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/textview_first" />
 
-        <Button
-            android:id="@+id/button_clear"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/clear_button_label"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.126"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/button_gallery"
-            app:layout_constraintVertical_bias="0.55" />
-
-        <Button
-            android:id="@+id/button_craft"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/craft_button_label"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.844"
-            app:layout_constraintStart_toEndOf="@+id/button_clear"
-            app:layout_constraintTop_toBottomOf="@id/button_gallery"
-            app:layout_constraintVertical_bias="0.56" />
--->
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/fab_stage_add"
             android:layout_width="wrap_content"

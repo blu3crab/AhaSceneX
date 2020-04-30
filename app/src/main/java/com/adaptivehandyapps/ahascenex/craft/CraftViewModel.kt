@@ -147,7 +147,7 @@ class CraftViewModel (val stageDatabase: StageDatabaseDao,
                 }
             }
             Log.d(TAG, "getPropList size = " + _propList.value!!.size)
-            currentPropIndex =  _propList.value!!.size - 1
+            currentPropIndex = _propList.value!!.size - 1
             if (currentPropIndex > -1) {
                 Log.d(TAG, "getPropList current prop = " + formatPropModel(_propList.value!!.get(currentPropIndex)))
             }
@@ -339,7 +339,7 @@ class CraftViewModel (val stageDatabase: StageDatabaseDao,
     // remove current prop
     fun removeCurrentProp(viewCraft: View) {
         if (currentPropIndex > -1) {
-            // TODO: remove prop after multiple props!
+            // TODO: crash remove prop after multiple props!
             var propModel = _propList.value!!.get(currentPropIndex)
             // remove prop in DB
             deletePropModelDatabase(propModel)
@@ -354,13 +354,13 @@ class CraftViewModel (val stageDatabase: StageDatabaseDao,
             _propList.value!!.removeAt(currentPropIndex)
             // indicate removal
             currentPropIndex -= 1
-
+            Log.d(TAG, "removeCurrentProp currentPropIndex set to $currentPropIndex")
             // redraw scene
             showScene(viewCraft)
         }
         else Log.d(TAG, "removeCurrentProp undefined...")
     }
-    // discard props from database for stage model
+    // discard specific prop from database
     fun deletePropModelDatabase(propModel: PropModel) {
         Log.d(TAG, "deletePropModelDatabase ")
         uiScope.launch {
@@ -369,7 +369,7 @@ class CraftViewModel (val stageDatabase: StageDatabaseDao,
         }
     }
     // discard props from database for stage model
-    fun deletePropModelDatabaseForStage() {
+    fun deletePropForStage() {
         Log.d(TAG, "deleteIdFromStageModelDatabase ")
         uiScope.launch {
             stageModel?.let {
@@ -385,18 +385,18 @@ class CraftViewModel (val stageDatabase: StageDatabaseDao,
     private suspend fun deleteProp(propModel: PropModel) {
         withContext(Dispatchers.IO) {
             Log.d(TAG, "delete " + propModel.tableId)
-            propDatabase.deletePropModel(propModel.tableId)
+            propDatabase.deletePropModelByKey(propModel.tableId)
         }
     }
     // discard all props from database
-    fun deletePropDatabase() {
+    fun clearPropDatabase() {
         Log.d(TAG, "deletePropDatabase ")
         uiScope.launch {
             Log.d(TAG,"deletePropDatabase...")
-            clearPropDatabase()
+            clearPropModelDatabase()
         }
     }
-    private suspend fun clearPropDatabase() {
+    private suspend fun clearPropModelDatabase() {
         withContext(Dispatchers.IO) {
             Log.d(TAG, "clearAllProp...")
             propDatabase.clear()
@@ -455,7 +455,7 @@ class CraftViewModel (val stageDatabase: StageDatabaseDao,
     }
     ///////////////////////////////////////////////////////////////////////////
     // discard scene from stage model database
-    fun deleteIdFromStageModelDatabase() {
+    fun deleteStageFromDatabase() {
         Log.d(TAG, "deleteIdFromStageModelDatabase ")
         uiScope.launch {
             stageModel?.let {
