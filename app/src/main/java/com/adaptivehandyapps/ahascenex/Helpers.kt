@@ -5,6 +5,7 @@
 //
 package com.adaptivehandyapps.ahascenex
 
+import com.adaptivehandyapps.ahascenex.craft.CraftTouch
 import com.adaptivehandyapps.ahascenex.model.PropModel
 import com.adaptivehandyapps.ahascenex.model.StageModel
 
@@ -32,5 +33,12 @@ fun formatPropModel(propModel: PropModel?, terse: Boolean = false): String {
                 "\n res id " + propModel.propResId + ", stage id " + propModel.stageId +
                 "\n prop scale = " + propModel.propScale + ", prop x/y = " + propModel.propX + "/" + propModel.propY
     }
-    return "stageModel NULL... "
+    return "propModel NULL... "
+}
+
+fun formatScalePivot(scalePivot: CraftTouch.ScalePivot?): String {
+    scalePivot?.let {
+        return "ScalePivot->scale ${scalePivot.scale}, x/y -> ${scalePivot.x}/${scalePivot.y}"
+    }
+    return "scalePivot NULL... "
 }

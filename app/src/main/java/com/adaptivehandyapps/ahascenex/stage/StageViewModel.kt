@@ -59,6 +59,8 @@ class StageViewModel ( //val database: StageDatabaseDao,
 //        getLastStageModel()
         // get stage list from DB
         getStageList()
+        // log at init
+        logStageList()
     }
     ///////////////////////////////////////////////////////////////////////////
     // public helpers
@@ -214,33 +216,41 @@ class StageViewModel ( //val database: StageDatabaseDao,
 //            stageModel
 //        }
 //    }
-
+    /////////////////////////////////////////////////////////////////////////////////////
     // add stage model by adding to stage list and inserting in database
-    fun addStageModel(stageModel: StageModel): Boolean {
-        var inserted = false
-        if (_status.value == StageListStatus.EMPTY) {
-            //emptyStageList()
-            // set list ops
-            //_stageList.value!!.set(0, stageModel)
-            _stageList.value!![0] = stageModel
-            //_stageList.value = _stageList.value
+    fun addStageModel(stageModel: StageModel) {
+//        if (_status.value == StageListStatus.EMPTY) {
+//            _status.value = StageListStatus.READY
+//        }
+        // get next nickname
+        stageModel.nickname = getNextStageModelNickname().toString()
+        Log.d(TAG, "addStageModel " + formatStageModel(stageModel, false))
+//        _stageList.value?.add(stageModel)
+        // insert stage in DB
+//        insertStage(stageModel)
+//        uiScope.launch {
+//            insert(stageModel)
+//            Log.d(TAG, "addStageModel DB insert " + formatStageModel(stageModel, false))
+//        }
+//        val insertedStageModel: StageModel? = getLastStage()
+        var insertedStageModel = insertAndGetStage(stageModel)
+        // if tableID == 0, NOT the "last" insert
+        if (insertedStageModel != null) {
+//        if (insertedStageModel != null && insertedStageModel.tableId != 0L) {
+            _stageList.value?.add(insertedStageModel)
+            Log.d(TAG, "addStageModel add to stageList " + formatStageModel(stageModel, false))
+            // set active stage index to last stage
+            activeStageListInx = _stageList.value!!.size.minus(1)
+            Log.d(TAG, "addStageModel sets active stage inx $activeStageListInx")
         }
         else {
-            stageModel.nickname = getNextStageModelNickname().toString()
-            Log.d(TAG, "addStageModel " + formatStageModel(stageModel, false))
-            _stageList.value?.add(stageModel)
-            inserted = true
+//            if (insertedStageModel != null ) Log.e(TAG, "insertedStageModel.tableId == 0L!")
+            Log.e(TAG, "insertedStageModel == NULL!")
         }
-        if (inserted) {
-            Log.d(TAG, "addStageModel ")
-            uiScope.launch {
-                insert(stageModel)
-                Log.d(TAG, "addStageModel DB insert " + formatStageModel(stageModel, false))
-                // set active stage index to last stage
-                activeStageListInx = _stageList.value!!.size.minus(1)
-                Log.d(TAG, "addStageModel sets active stage inx " + activeStageListInx)
-            }
-        }
+        logStageList()
+    }
+
+    fun logStageList() {
         // log resulting stage list
         _stageList.value?.let {
             // iterate through stagelist
@@ -251,16 +261,52 @@ class StageViewModel ( //val database: StageDatabaseDao,
             _status.value = StageListStatus.READY
         } ?: run {
             _status.value = StageListStatus.EMPTY
+            Log.e(TAG, "logStageList finds empty stage list " + activeStageListInx)
         }
-        return inserted
+    }
+
+    fun insertAndGetStage(stageModel: StageModel): StageModel {
+        uiScope.launch {
+            insert(stageModel)
+            Log.d(TAG, "insertAndGetStage DB insert " + formatStageModel(stageModel, false))
+            var stageModel: StageModel? = null
+                stageModel = getLast()
+                Log.d(TAG, "insertAndGetStage DB getLast for " + formatStageModel(stageModel, false))
+                stageModel
+            }
+            return stageModel
+    }
+    fun insertStage(stageModel: StageModel) {
+        uiScope.launch {
+            insert(stageModel)
+            Log.d(TAG, "addStageModel DB insert " + formatStageModel(stageModel, false))
+        }
     }
     private suspend fun insert(stageModel: StageModel) {
-        withContext(Dispatchers.IO) {
+        withContext(Dispatchers.Default) {
             stageDatabase.insert(stageModel)
         }
     }
 
-    ///////////////////////////////////////////////////////////////////////////
+    // get last prop in database
+    fun getLastStage(): StageModel? {
+        Log.d(TAG, "getLastStage ")
+        var stageModel: StageModel? = null
+        uiScope.launch {
+            stageModel = getLast()
+            Log.d(TAG, "getLastStage DB update for " + formatStageModel(stageModel, false))
+            stageModel
+        }
+        return stageModel
+    }
+    private suspend fun getLast(): StageModel? {
+        return withContext(Dispatchers.Default) {
+            var stageModel: StageModel? = stageDatabase.getLast()
+            stageModel
+        }
+    }
+
+        ///////////////////////////////////////////////////////////////////////////
     // private helpers
     // clear stagelist
     private fun emptyStageList() {

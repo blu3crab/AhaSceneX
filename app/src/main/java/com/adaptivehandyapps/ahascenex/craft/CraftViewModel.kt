@@ -19,6 +19,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.adaptivehandyapps.ahascenex.R
 import com.adaptivehandyapps.ahascenex.formatPropModel
+import com.adaptivehandyapps.ahascenex.formatScalePivot
 import com.adaptivehandyapps.ahascenex.formatStageModel
 import com.adaptivehandyapps.ahascenex.model.PropDatabaseDao
 import com.adaptivehandyapps.ahascenex.model.PropModel
@@ -74,6 +75,8 @@ class CraftViewModel (val stageDatabase: StageDatabaseDao,
     private var resSeedId: Int = R.drawable.prop_flower_t1_1024
     private var resNickname: String = "prop_flower_t1_1024"
 
+    private var dbComplete = false
+
     ///////////////////////////////////////////////////////////////////////////
     init {
         emptyPropList()
@@ -117,40 +120,6 @@ class CraftViewModel (val stageDatabase: StageDatabaseDao,
             Log.e("BindingAdapter", "scenex Glide exception! " + ex.localizedMessage)
         }
     }
-    // gen prop view list
-    fun createPropViewList(viewCraft: View) {
-        Log.d(TAG, "propModelList size " + (propList.value?.size ?: "undefined"))
-        // for each prop in prop list
-        _propList.value?.let {
-            // empty prop view list in prep for re-loading as prop DB is scanned
-            emptyPropViewList()
-            for (propModel in _propList.value!!.reversed()) {
-                Log.d(TAG, "showScene for " + formatPropModel(propModel, false))
-                Log.d(
-                    TAG,
-                    "propModel.stageId == stageModel.tableId?" + propModel.stageId + "==" + stageModel.value!!.tableId
-                )
-                // if prop on this stage
-                if (propModel.stageId == stageModel.value!!.tableId) {
-                    // add prop view
-                    addPropView(viewCraft, propModel)
-                    Log.d(
-                        TAG,
-                        "showScene after addPropView for " + formatPropModel(propModel, false)
-                    )
-                }
-            }
-        }
-    }
-    // clear stagelist
-    private fun emptyPropViewList() {
-        Log.d(TAG, "emptyPropViewList...")
-        propViewList = ArrayList()
-    }
-    private fun emptyPropList() {
-        Log.d(TAG, "emptyPropList...")
-        _propList.value = mutableListOf<PropModel>()    // empty list
-    }
 
     ///////////////////////////////////////////////////////////////////////////
     // PROP database
@@ -159,15 +128,21 @@ class CraftViewModel (val stageDatabase: StageDatabaseDao,
             // get prop list for all stages in temp list var
             propListAllStages = getPropListFromDatabase()
             Log.d(TAG, "getPropList for all stages size = " + propListAllStages.size)
+            Log.d(TAG, "getPropList stageModel id " + stageModel.value?.tableId)
+
             // for each prop in list
             for (propModel in propListAllStages) {
+                Log.d(TAG, "getPropList current prop = " + formatPropModel(propModel))
                 // if prop in on stage
                 if (propModel.stageId == stageModel.value?.tableId) {
                     // add to prop list
                     _propList.value?.add(propModel)
                 }
             }
+            // reverse prop list to maintain Z order
+            if (_propList.value?.size!! > 0) _propList.value!!.reverse()
             Log.d(TAG, "getPropList size = " + _propList.value!!.size)
+
             activePropListIndex = _propList.value!!.size - 1
             if (activePropListIndex > -1) {
                 Log.d(TAG, "getPropList current prop = " + formatPropModel(_propList.value!!.get(activePropListIndex)))
@@ -187,6 +162,34 @@ class CraftViewModel (val stageDatabase: StageDatabaseDao,
             }
             list
         }
+    }
+    // init: gen prop view list syncing with prop list
+    fun createPropViewList(viewCraft: View) {
+        Log.d(TAG, "propModelList size " + (propList.value?.size ?: "undefined"))
+        // for each prop in prop list
+        _propList.value?.let {
+            // empty prop view list in prep for re-loading as prop DB is scanned
+            emptyPropViewList()
+            for (propModel in _propList.value!!) {
+                Log.d(TAG,"createPropViewList for " + formatPropModel(propModel, false))
+                Log.d(TAG,"createPropViewList propModel.stageId == stageModel.tableId? ${propModel.stageId} == ${stageModel.value!!.tableId}")
+                // if prop on this stage
+                if (propModel.stageId == stageModel.value!!.tableId) {
+                    // add prop view
+                    addPropView(viewCraft, propModel)
+                    Log.d(TAG,"createPropViewList after addPropView for " + formatPropModel(propModel, false))
+                }
+            }
+        }
+    }
+    // clear stagelist
+    private fun emptyPropViewList() {
+        Log.d(TAG, "emptyPropViewList...")
+        propViewList = ArrayList()
+    }
+    private fun emptyPropList() {
+        Log.d(TAG, "emptyPropList...")
+        _propList.value = mutableListOf<PropModel>()    // empty list
     }
     // add prop to stage view
     fun addPropView(stageView: View, propModel: PropModel?) {
@@ -230,15 +233,19 @@ class CraftViewModel (val stageDatabase: StageDatabaseDao,
         // add listener
         propView.setOnTouchListener {
                 motionView: View, motionEvent: MotionEvent ->
-            craftTouch.onTouch(motionView, motionEvent)
-            // capture results of prop touch motion events
-            updatePropModelSceneTouch(motionView)
+            val actionUp = craftTouch.onTouch(motionView, motionEvent)
+            if (actionUp) {
+                // capture results of prop touch motion events
+                updatePropModelSceneTouch(motionView)
+            }
 
             true
         }
 
         // add prop to DB
-        if (propModel == null) addPropModel(propView, resSeedId)
+        if (propModel == null) {
+            addPropModel(propView, resSeedId)
+        }
 
         // add to prop view to prop view list
         propViewList.add(propView)
@@ -290,11 +297,17 @@ class CraftViewModel (val stageDatabase: StageDatabaseDao,
         propModel.propScale = propView.scaleX
         propModel.propX = propView.x
         propModel.propY = propView.y
-
         // insert prop model in DB
         insertPropModelDatabase(propModel)
-        // update prop model list
-        _propList.value!!.add(propModel)
+        val insertedPropModel = getLastProp()
+        // log
+        if (insertedPropModel != null) {
+            Log.d(TAG,"addPropModel insertPropModelDatabase getLastProp " + formatPropModel(insertedPropModel,false))
+            // update prop model list
+            //        _propList.value!!.add(propModel)
+            _propList.value!!.add(insertedPropModel!!)
+        }
+        else Log.e(TAG, "addPropModel insertPropModelDatabase getLastProp return NULL!")
     }
     // add to prop model database
     fun insertPropModelDatabase(propModel: PropModel) {
@@ -307,14 +320,34 @@ class CraftViewModel (val stageDatabase: StageDatabaseDao,
         }
     }
     private suspend fun insert(propModel: PropModel) {
+        //private suspend fun insert(propModel: PropModel) {
         withContext(Dispatchers.IO) {
             propDatabase.insert(propModel)
         }
     }
+    // get last prop in database
+    fun getLastProp(): PropModel? {
+        Log.d(TAG, "insertPropModelDatabase ")
+        var propModel: PropModel? = null
+        uiScope.launch {
+            propModel = getLast()
+            Log.d(TAG, "insertPropModelDatabase DB update for " + formatPropModel(propModel, false))
+            propModel
+        }
+        return propModel
+    }
+//    private suspend fun getLast(): PropModel? {
+//        return withContext(Dispatchers.IO) {
+//            val propModel = propDatabase.getLast()
+//            propModel
+//        }
+//    }
+
     ///////////////////////////////////////////////////////////////////////////
     // update prop model scale & x,y
     fun updatePropModelSceneTouch(motionView: View) {
         var propScalePivot = craftTouch.propScalePivot
+        Log.d(TAG, "updatePropModelSceneTouch-> " + formatScalePivot(propScalePivot))
         var propModel = mapPropViewToPropModel(motionView)
         propModel?.let {
             propModel.propScale = propScalePivot.scale
@@ -323,7 +356,7 @@ class CraftViewModel (val stageDatabase: StageDatabaseDao,
             // update local list
             var i = _propList.value!!.indexOf(propModel)
             _propList.value!![i] = propModel
-            // TODO: update only if touch finished
+            // update DB
             updatePropModelDatabase(propModel)
             Log.d(TAG, "updatePropModelSceneTouch-> " + formatPropModel(propModel))
         }
@@ -354,19 +387,46 @@ class CraftViewModel (val stageDatabase: StageDatabaseDao,
         return null
     }
     // update to prop model database
-    fun updatePropModelDatabase(propModel: PropModel) {
+    private fun updatePropModelDatabase(propModel: PropModel) {
         Log.d(TAG, "updatePropModelDatabase ")
         uiScope.launch {
             propModel?.let {
-                update(it)
-                Log.d(TAG, "updatePropModelDatabase DB update for " + formatPropModel(propModel, false))
+                dbComplete = false
+                //update(it)
+                Log.d(TAG, "updatePropModelDatabase delete(it) tableId ${it.tableId}")
+                delete(it)
+                it.tableId = 0
+                Log.d(TAG, "updatePropModelDatabase insert(it) tableId ${it.tableId}")
+                Log.d(TAG, "updatePropModelDatabase DB insert it for " + formatPropModel(it, false))
+                insert(it)
+                val lastProp = getLast()
+                Log.d(TAG, "updatePropModelDatabase DB getLast for " + formatPropModel(lastProp, false))
             }
         }
     }
+    private suspend fun delete(propModel: PropModel) {
+        withContext(Dispatchers.Default) {
+            propDatabase.deletePropModelByKey(propModel.tableId)
+        }
+    }
     private suspend fun update(propModel: PropModel) {
-        withContext(Dispatchers.IO) {
+        withContext(Dispatchers.Default) {
             propDatabase.update(propModel)
         }
+    }
+    private suspend fun getLast(): PropModel? {
+        return withContext(Dispatchers.Default) {
+            var propModel: PropModel? = propDatabase.getLast()
+            propModel
+        }
+//        return withContext(Dispatchers.IO) {
+//            var list: MutableList<PropModel> = propDatabase.getAll()
+//            if (list == null){
+//                list = mutableListOf<PropModel>()
+//            }
+//            list
+//        }
+
     }
     ///////////////////////////////////////////////////////////////////////////
     // remove current prop
@@ -486,22 +546,30 @@ class CraftViewModel (val stageDatabase: StageDatabaseDao,
             stageDatabase.update(stageModel)
         }
     }
+
     ///////////////////////////////////////////////////////////////////////////
-    // discard scene from stage model database
-    fun deleteStageFromDatabase() {
-        Log.d(TAG, "deleteIdFromStageModelDatabase ")
-        uiScope.launch {
-            stageModel?.let {
-                Log.d(TAG, "deleteIdFromStageModelDatabase " + formatStageModel(stageModel.value, false))
-                delete(stageModel.value!!)
-            }
-        }
+    // coroutines: cancel all coroutines when the ViewModel is destroyed
+    override fun onCleared() {
+        super.onCleared()
+        viewModelJob.cancel()
     }
-    private suspend fun delete(stageModel: StageModel) {
-        withContext(Dispatchers.IO) {
-            Log.d(TAG, "delete " + stageModel.tableId)
-            stageDatabase.deleteStageModel(stageModel.tableId)
-        }
-    }
+
+//    ///////////////////////////////////////////////////////////////////////////
+//    // discard scene from stage model database
+//    fun deleteStageFromDatabase() {
+//        Log.d(TAG, "deleteIdFromStageModelDatabase ")
+//        uiScope.launch {
+//            stageModel?.let {
+//                Log.d(TAG, "deleteIdFromStageModelDatabase " + formatStageModel(stageModel.value, false))
+//                delete(stageModel.value!!)
+//            }
+//        }
+//    }
+//    private suspend fun delete(stageModel: StageModel) {
+//        withContext(Dispatchers.IO) {
+//            Log.d(TAG, "delete " + stageModel.tableId)
+//            stageDatabase.deleteStageModel(stageModel.tableId)
+//        }
+//    }
     ///////////////////////////////////////////////////////////////////////////
 }

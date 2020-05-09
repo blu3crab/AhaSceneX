@@ -112,9 +112,13 @@ class CraftFragment : Fragment() {
         // imageview_scene touch interactions
         viewCraft.findViewById<ImageView>(R.id.imageview_scene).setOnTouchListener {
                 motionView: View, motionEvent: MotionEvent ->
-            craftViewModel.craftTouch.onTouch(motionView, motionEvent)
-            // capture results of scene touch motion events
-            craftViewModel.updateStageModelSceneTouch()
+            val actionUp = craftViewModel.craftTouch.onTouch(motionView, motionEvent)
+            if (actionUp) {
+                // capture results of scene touch motion events
+                craftViewModel.updateStageModelSceneTouch()
+                // save stage model
+                craftViewModel.saveStageModel(viewCraft)
+            }
             true    // pass touch on
         }
         val fabCraftAdd = viewCraft.findViewById<FloatingActionButton>(R.id.fab_craft_add)

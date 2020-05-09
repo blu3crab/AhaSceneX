@@ -84,7 +84,8 @@ class CraftTouch {
 //    }
     ///////////////////////////////////////////////////////////////////////////
     // touch handler
-    fun onTouch(motionView: View, motionEvent: MotionEvent) {
+    fun onTouch(motionView: View, motionEvent: MotionEvent): Boolean {
+        var actionUp = false
 
         Log.d(TAG, "MotionEvent onTouch view id ${motionView.id}")
         var sceneMotion = true
@@ -294,14 +295,20 @@ class CraftTouch {
                     // if UP, complete single touch
                     if (actionMasked == MotionEvent.ACTION_UP) {
                         singleTouchInProgress = false
+                        actionUp = true
                     }
                 }
+            }
+            if (actionMasked == MotionEvent.ACTION_UP) {
+                actionUp = true
+                Log.d(TAG,"MotionEvent ACTION_UP $actionUp")
             }
         }
 
         //Log.d(TAG, "cameraDistance ${motionView.cameraDistance}, translationX ${motionView.translationX}, translationY ${motionView.translationY}")
         //motionView.setLeftTopRightBottom(left, top, right, bottom)
-
+        Log.d(TAG, "actionUp $actionUp")
+        return actionUp
     }
     private fun getVRect(motionView: View): Rect {
         // get local visible rect

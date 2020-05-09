@@ -186,9 +186,11 @@ class StageFragment : Fragment() {
     private fun pickImageFromGallery() {
         // TODO: add Prefs to select image source
         // ACTION_PICK launches into Google Photos requires READ/WRITE permissions or denied on orientation changes
-        val intent = Intent(Intent.ACTION_PICK)
+//        val intent = Intent(Intent.ACTION_PICK)
+
         // ACTION_OPEN_DOCUMENT retains permissions for later display as well as launching into "local" phone gallery
-        //val intent = Intent(Intent.ACTION_OPEN_DOCUMENT)
+        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT)
+
         //val intent = Intent(Intent.ACTION_GET_CONTENT)    // local
         //val intent = Intent(Intent.ACTION_CHOOSER)
         intent.type = "image/*"
@@ -214,14 +216,18 @@ class StageFragment : Fragment() {
                     stageModel.sceneSrcUrl = resultUri.toString()
                     stageModel.label = "scene " + position
 
-                    if (stageViewModel.addStageModel(stageModel)) {
-                        //val position = stageViewModel.stageList.value?.size!!.minus(1)
-                        binding.sceneListGrid.adapter?.notifyItemInserted(position)
-                        Log.d(TAG, "\nscenex notifyItemInserted at position " + position)
-                    } else {
-                        binding.sceneListGrid.adapter?.notifyItemChanged(0)
-                        Log.d(TAG, "\nscenex notifyItemInserted at position 0")
-                    }
+                    stageViewModel.addStageModel(stageModel)
+                    binding.sceneListGrid.adapter?.notifyItemInserted(position)
+                    Log.d(TAG, "\nscenex notifyItemInserted at position " + position)
+
+//                    if (stageViewModel.addStageModel(stageModel)) {
+//                        //val position = stageViewModel.stageList.value?.size!!.minus(1)
+//                        binding.sceneListGrid.adapter?.notifyItemInserted(position)
+//                        Log.d(TAG, "\nscenex notifyItemInserted at position " + position)
+//                    } else {
+//                        binding.sceneListGrid.adapter?.notifyItemChanged(0)
+//                        Log.d(TAG, "\nscenex notifyItemInserted at position 0")
+//                    }
                 }
                 if (resultUri == null) {
                     Log.d(TAG, "\nscenex imageUri NULL...")
