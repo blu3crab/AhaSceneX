@@ -125,14 +125,14 @@ class StageViewModel ( //val database: StageDatabaseDao,
         uiScope.launch {
             stageModel?.let {
                 Log.d(TAG,"deletePropModelDatabaseForStage " + formatStageModel(stageModel,true))
-                deleteStageProp(stageModel.tableId)
+                deleteStageProp(stageModel)
             }
         }
     }
-    private suspend fun deleteStageProp(stageTableId: Long) {
+    private suspend fun deleteStageProp(stageModel: StageModel) {
         withContext(Dispatchers.IO) {
-            Log.d(TAG, "deleteProp for stageId " + stageTableId)
-            propDatabase.deletePropModelByStageId(stageTableId)
+            Log.d(TAG, "deleteProp for stageNickname " + stageModel.nickname)
+            propDatabase.deletePropModelByStageId(stageModel.nickname)
         }
     }
 

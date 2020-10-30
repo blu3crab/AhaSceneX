@@ -128,13 +128,14 @@ class CraftViewModel (val stageDatabase: StageDatabaseDao,
             // get prop list for all stages in temp list var
             propListAllStages = getPropListFromDatabase()
             Log.d(TAG, "getPropList for all stages size = " + propListAllStages.size)
-            Log.d(TAG, "getPropList stageModel id " + stageModel.value?.tableId)
+            Log.d(TAG, "getPropList stageModel id " + stageModel.value?.tableId + ", nickname " + stageModel.value?.nickname)
 
             // for each prop in list
             for (propModel in propListAllStages) {
                 Log.d(TAG, "getPropList current prop = " + formatPropModel(propModel))
                 // if prop in on stage
-                if (propModel.stageId == stageModel.value?.tableId) {
+//                if (propModel.stageId == stageModel.value?.tableId) {
+                if (propModel.stageNickname == stageModel.value?.nickname) {
                     // add to prop list
                     _propList.value?.add(propModel)
                 }
@@ -172,9 +173,11 @@ class CraftViewModel (val stageDatabase: StageDatabaseDao,
             emptyPropViewList()
             for (propModel in _propList.value!!) {
                 Log.d(TAG,"createPropViewList for " + formatPropModel(propModel, false))
-                Log.d(TAG,"createPropViewList propModel.stageId == stageModel.tableId? ${propModel.stageId} == ${stageModel.value!!.tableId}")
+//                Log.d(TAG,"createPropViewList propModel.stageId == stageModel.tableId? ${propModel.stageId} == ${stageModel.value!!.tableId}")
+                Log.d(TAG,"createPropViewList propModel.stageNickname == stageModel.nickname? ${propModel.stageNickname} == ${stageModel.value!!.nickname}")
                 // if prop on this stage
-                if (propModel.stageId == stageModel.value!!.tableId) {
+//                if (propModel.stageId == stageModel.value!!.tableId) {
+                if (propModel.stageNickname == stageModel.value!!.nickname) {
                     // add prop view
                     addPropView(viewCraft, propModel)
                     Log.d(TAG,"createPropViewList after addPropView for " + formatPropModel(propModel, false))
@@ -289,7 +292,8 @@ class CraftViewModel (val stageDatabase: StageDatabaseDao,
 //      "propModel id# " + propModel.nickname + " = " + propModel.label + ", type " + propModel.type +
 //      "\n res id " + propModel.propResId + ", stage id " + propModel.stageId +
 //      "\n prop scale = " + propModel.propScale + ", prop x/y = " + propModel.propX + "/" + propModel.propY
-        propModel.stageId = stageModel.value!!.tableId
+//        propModel.stageId = stageModel.value!!.tableId
+        propModel.stageNickname = stageModel.value!!.nickname
         propModel.propResId = resId
         propModel.nickname = resNickname
         //propModel.type = PropType.PROP_TYPE.toString()
@@ -345,7 +349,7 @@ class CraftViewModel (val stageDatabase: StageDatabaseDao,
 
     ///////////////////////////////////////////////////////////////////////////
     // update prop model scale & x,y
-    fun updatePropModelSceneTouch(motionView: View) {
+    private fun updatePropModelSceneTouch(motionView: View) {
         var propScalePivot = craftTouch.propScalePivot
         Log.d(TAG, "updatePropModelSceneTouch-> " + formatScalePivot(propScalePivot))
         var propModel = mapPropViewToPropModel(motionView)
@@ -356,9 +360,18 @@ class CraftViewModel (val stageDatabase: StageDatabaseDao,
             // update local list
             var i = _propList.value!!.indexOf(propModel)
             _propList.value!![i] = propModel
-            // update DB
-            updatePropModelDatabase(propModel)
-            Log.d(TAG, "updatePropModelSceneTouch-> " + formatPropModel(propModel))
+//            // update DB
+//            updatePropModelDatabase(propModel)
+            Log.d(TAG, "updatePropModelSceneTouch updating to -> " + formatPropModel(propModel))
+            // get updated entry
+            var updatedPropModel: PropModel = updateAndGetProp(propModel)
+            Log.d(TAG, "updatePropModelSceneTouch getPropModelFromDatabase -> " + formatPropModel(updatedPropModel, false))
+
+            if (propModel.propScale != updatedPropModel.propScale ||
+                propModel.propX != updatedPropModel.propX ||
+                propModel.propY != updatedPropModel.propY) {
+                Log.e(TAG, "updatePropModelSceneTouch FAILED!")
+            }
         }
     }
     // map prop view to prop model
@@ -386,32 +399,71 @@ class CraftViewModel (val stageDatabase: StageDatabaseDao,
         Log.e(TAG, "mapPropViewToPropModel propModel NOT found!")
         return null
     }
+
     // update to prop model database
     private fun updatePropModelDatabase(propModel: PropModel) {
         Log.d(TAG, "updatePropModelDatabase ")
         uiScope.launch {
             propModel?.let {
                 dbComplete = false
-                //update(it)
-                Log.d(TAG, "updatePropModelDatabase delete(it) tableId ${it.tableId}")
-                delete(it)
-                it.tableId = 0
-                Log.d(TAG, "updatePropModelDatabase insert(it) tableId ${it.tableId}")
-                Log.d(TAG, "updatePropModelDatabase DB insert it for " + formatPropModel(it, false))
-                insert(it)
-                val lastProp = getLast()
-                Log.d(TAG, "updatePropModelDatabase DB getLast for " + formatPropModel(lastProp, false))
+                // TODO: test update instead of delete/insert
+                Log.d(TAG, "updatePropModelDatabase update(it) tableId ${it.tableId}")
+                update(it)
+//                Log.d(TAG, "updatePropModelDatabase delete(it) tableId ${it.tableId}")
+//                delete(it)
+//                it.tableId = 0
+//                Log.d(TAG, "updatePropModelDatabase insert(it) tableId ${it.tableId}")
+//                Log.d(TAG, "updatePropModelDatabase DB insert it for " + formatPropModel(it, false))
+//                insert(it)
+//                val lastProp = getLast()
+//                Log.d(TAG, "updatePropModelDatabase DB getLast for " + formatPropModel(lastProp, false))
             }
         }
     }
-    private suspend fun delete(propModel: PropModel) {
-        withContext(Dispatchers.Default) {
-            propDatabase.deletePropModelByKey(propModel.tableId)
+    fun updateAndGetProp(propModel: PropModel): PropModel {
+        uiScope.launch {
+            update(propModel)
+            Log.d(TAG, "updateAndGetStage DB insert " + formatPropModel(propModel, false))
+            var updatedPropModel: PropModel? = null
+            updatedPropModel = getPropModelById(propModel.tableId)
+            Log.d(TAG, "updateAndGetStage DB get for " + formatPropModel(updatedPropModel, false))
+            updatedPropModel
         }
+        return propModel
     }
+
     private suspend fun update(propModel: PropModel) {
         withContext(Dispatchers.Default) {
             propDatabase.update(propModel)
+        }
+    }
+//    // update to prop model database
+//    private fun getPropModelFromDatabase(propModelId: Long): PropModel? {
+//        Log.d(TAG, "updatePropModelDatabase ")
+//        uiScope.launch {
+//            // get updated entry
+//            var updatedPropModel: PropModel? = getPropModelById(propModelId)
+//            updatedPropModel
+//        }
+//    }
+
+    private suspend fun getPropModelById(propModelId: Long): PropModel? {
+        withContext(Dispatchers.Default) {
+            var propModel: PropModel? = propDatabase.get(propModelId)
+            propModel
+        }
+        return null
+    }
+//    private suspend fun getLast(): StageModel? {
+//        return withContext(Dispatchers.Default) {
+//            var stageModel: StageModel? = stageDatabase.getLast()
+//            stageModel
+//        }
+//    }
+
+    private suspend fun delete(propModel: PropModel) {
+        withContext(Dispatchers.Default) {
+            propDatabase.deletePropModelByKey(propModel.tableId)
         }
     }
     private suspend fun getLast(): PropModel? {

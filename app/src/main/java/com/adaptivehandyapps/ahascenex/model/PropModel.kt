@@ -29,8 +29,10 @@ data class PropModel(
 
     @ColumnInfo(name = "prop_res_id")
     var propResId: Int = 0,
-    @ColumnInfo(name = "stage_id")
-    var stageId: Long = 0L,
+//    @ColumnInfo(name = "stage_id")
+//    var stageId: Long = 0L,
+    @ColumnInfo(name = "stage_nickname")
+    var stageNickname: String = "nada",
 
     @ColumnInfo(name = "nickname")
     var nickname: String = "nada",

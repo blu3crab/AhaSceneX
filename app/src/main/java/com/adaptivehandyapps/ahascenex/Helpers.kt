@@ -30,7 +30,7 @@ fun formatPropModel(propModel: PropModel?, terse: Boolean = false): String {
         }
         return "propModel tableId# " + propModel.tableId + ", nickname# " +
                 propModel.nickname + " = " + propModel.label + ", type " + propModel.type +
-                "\n res id " + propModel.propResId + ", stage id " + propModel.stageId +
+                "\n res id " + propModel.propResId + ", stage nickname " + propModel.stageNickname +
                 "\n prop scale = " + propModel.propScale + ", prop x/y = " + propModel.propX + "/" + propModel.propY
     }
     return "propModel NULL... "
