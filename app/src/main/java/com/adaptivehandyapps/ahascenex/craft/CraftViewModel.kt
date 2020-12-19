@@ -260,25 +260,28 @@ class CraftViewModel (val stageDatabase: StageDatabaseDao,
     }
 
     fun cycleProp(resIdSeed: Int): Int {
-        var resId = resIdSeed
-        when (resId) {
-            R.drawable.prop_flower_t1_1024 -> resId = R.drawable.prop_leyland_t2_1024
-            R.drawable.prop_leyland_t2_1024 -> resId = R.drawable.prop_holly_large_t1_1024
-            R.drawable.prop_holly_large_t1_1024 -> resId = R.drawable.prop_laurel_small_t1_1024
-            R.drawable.prop_laurel_small_t1_1024 -> resId = R.drawable.prop_leyland_t1_1024
-            else -> resId = R.drawable.prop_flower_t1_1024
-        }
+//        var resId = resIdSeed
+        // TODO: present prop selection gallery view
+        var resId = R.drawable.prop_leyland_t2_1024
+//        when (resId) {
+//            R.drawable.prop_flower_t1_1024 -> resId = R.drawable.prop_leyland_t2_1024
+//            R.drawable.prop_leyland_t2_1024 -> resId = R.drawable.prop_holly_large_t1_1024
+//            R.drawable.prop_holly_large_t1_1024 -> resId = R.drawable.prop_laurel_small_t1_1024
+//            R.drawable.prop_laurel_small_t1_1024 -> resId = R.drawable.prop_leyland_t1_1024
+//            else -> resId = R.drawable.prop_flower_t1_1024
+//        }
         return resId
     }
     fun syncPropNickname(resId: Int): String {
-        var resNickname = PropNicknameEnum.PROP_FLOWER_T1
-        when (resId) {
-            R.drawable.prop_leyland_t2_1024 -> resNickname = PropNicknameEnum.PROP_LEYLAND_T2
-            R.drawable.prop_holly_large_t1_1024 -> resNickname = PropNicknameEnum.PROP_HOLLY_LARGE_T1
-            R.drawable.prop_laurel_small_t1_1024 -> resNickname = PropNicknameEnum.PROP_LAUREL_SMALL_T1
-            R.drawable.prop_leyland_t1_1024 -> resNickname = PropNicknameEnum.PROP_LEYLAND_T1
-            else -> resNickname = PropNicknameEnum.PROP_FLOWER_T1
-        }
+        var resNickname = PropNicknameEnum.PROP_LEYLAND_T2
+        // TODO: present prop selection gallery view
+//        when (resId) {
+//            R.drawable.prop_leyland_t2_1024 -> resNickname = PropNicknameEnum.PROP_LEYLAND_T2
+//            R.drawable.prop_holly_large_t1_1024 -> resNickname = PropNicknameEnum.PROP_HOLLY_LARGE_T1
+//            R.drawable.prop_laurel_small_t1_1024 -> resNickname = PropNicknameEnum.PROP_LAUREL_SMALL_T1
+//            R.drawable.prop_leyland_t1_1024 -> resNickname = PropNicknameEnum.PROP_LEYLAND_T1
+//            else -> resNickname = PropNicknameEnum.PROP_FLOWER_T1
+//        }
         return resNickname.toString()
     }
 
